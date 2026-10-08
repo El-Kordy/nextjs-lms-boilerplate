@@ -5,9 +5,7 @@ import type { NextRequest } from "next/server";
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/courses",
-  "/messages",
   "/profile",
-  "/subscriptions",
 ];
 
 const ADMIN_PREFIXES = ["/admin"];

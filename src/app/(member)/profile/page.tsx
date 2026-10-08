@@ -13,7 +13,7 @@ export default async function ProfilePage() {
   const profile = await profileService.getProfile();
 
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={false} unreadMessages={3}>
+    <AppLayout user={CURRENT_USER} isAdmin={false}>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
         <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
         <p className="text-sm text-muted-foreground">

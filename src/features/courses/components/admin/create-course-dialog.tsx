@@ -41,7 +41,7 @@ export function CreateCourseDialog() {
             <Label htmlFor="new-desc">Description</Label>
             <Textarea
               id="new-desc"
-              placeholder="What will members learn?"
+              placeholder="What will students learn?"
               className="min-h-[80px] resize-none"
             />
           </div>

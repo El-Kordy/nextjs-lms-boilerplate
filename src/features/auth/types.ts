@@ -9,8 +9,6 @@ export interface LoginInput {
 
 export interface OnboardingInput {
   phone: string;
-  bkash: string;
-  telegram: string;
   bio?: string;
 }
 

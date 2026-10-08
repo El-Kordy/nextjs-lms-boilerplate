@@ -32,10 +32,10 @@ export default function LoginPage() {
           href="/"
           className="text-2xl font-semibold tracking-tight"
         >
-          Foyzul&apos;s Circle
+          WNM
         </Link>
         <p className="mt-2 text-sm text-muted-foreground">
-          Mentoring community for Bangladeshi software engineers
+          Online learning platform for structured technical education
         </p>
 
         <div className="mt-10">
