@@ -7,29 +7,23 @@ const MOCK_MEMBER: User = {
   id: "1",
   name: "Rahim Uddin",
   email: "rahim@example.com",
-  role: "member",
-  status: "active",
+  role: "student",
   phone: "+880 1712-345678",
-  bkash: "01712-345678",
-  telegram: "@rahim_uddin",
   bio: "Full-stack developer working with Node.js and React.",
-  memberSince: "January 2026",
-  expiresAt: "April 30, 2026",
 };
 
 const MOCK_ADMIN: User = {
   id: "admin-1",
-  name: "Foyzul Karim",
-  email: "foyzul@example.com",
+  name: "WNM Admin",
+  email: "admin@wnm.local",
   role: "admin",
-  status: "active",
 };
 
 export function useMockAuth() {
   const [user, setUser] = useState<User | null>(MOCK_MEMBER);
   const [isLoading, setIsLoading] = useState(false);
 
-  const login = useCallback((role: Role = "member") => {
+  const login = useCallback((role: Role = "student") => {
     setIsLoading(true);
     setTimeout(() => {
       setUser(role === "admin" ? MOCK_ADMIN : MOCK_MEMBER);

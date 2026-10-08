@@ -1,16 +1,15 @@
-import type { CourseWithProgress, NextSession } from "@/types";
+import type { CourseWithProgress } from "@/types";
 
-export type { CourseWithProgress, NextSession };
+export type { CourseWithProgress };
 
-export interface DashboardData {
-  courses: CourseWithProgress[];
-  nextSession: NextSession | null;
-  announcement: string | null;
-  recentActivity: ActivityItem[];
-}
-
-export interface ActivityItem {
+export type ActivityItem = {
   icon: "watched" | "message" | "started";
   text: string;
   time: string;
+};
+
+export interface DashboardData {
+  courses: CourseWithProgress[];
+  announcement: string | null;
+  recentActivity: ActivityItem[];
 }

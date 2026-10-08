@@ -8,9 +8,9 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Foyzul's Circle — Mentoring Community for Bangladeshi Engineers",
+  title: "WNM — Learning Platform",
   description:
-    "A membership-based mentoring community for Bangladeshi software engineers. Access production-focused video content, live sessions, and direct mentoring from a senior engineer.",
+    "WNM is an online learning platform for structured technical courses, focused lessons, video content, learning progress, and course-based Q&A.",
 };
 
 export default function RootLayout({

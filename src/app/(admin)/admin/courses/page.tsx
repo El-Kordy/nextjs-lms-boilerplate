@@ -4,8 +4,8 @@ import { CreateCourseDialog } from "@/features/courses/components/admin/create-c
 import { AdminCourseList } from "@/features/courses/components/admin/admin-course-list";
 
 const CURRENT_USER = {
-  name: "Foyzul Karim",
-  email: "foyzul@example.com",
+  name: "WNM Admin",
+  email: "admin@wnm.local",
   avatar: undefined,
 };
 
@@ -13,7 +13,7 @@ export default async function AdminCoursesPage() {
   const courses = await courseService.getAll();
 
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={true} unreadMessages={5}>
+    <AppLayout user={CURRENT_USER} isAdmin={true}>
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <div>

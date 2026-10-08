@@ -1,7 +1,5 @@
-export type Role = "member" | "admin";
-export type MemberStatus = "active" | "pending" | "expired";
-export type PaymentMethod = "bkash" | "nagad";
-export type TransactionStatus = "pending" | "approved" | "declined";
+export type Role = string;
+
 export type CourseStatus = "published" | "draft" | "in_progress";
 
 export interface User {
@@ -9,14 +7,9 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  role: Role;
-  status: MemberStatus;
+  role: string;
   phone?: string;
-  bkash?: string;
-  telegram?: string;
   bio?: string;
-  memberSince?: string;
-  expiresAt?: string;
 }
 
 export interface Course {
@@ -42,40 +35,6 @@ export interface VideoWithProgress extends Video {
 
 export interface CourseWithProgress extends Course {
   watchedVideos: number;
-}
-
-export interface Transaction {
-  id: string;
-  transactionId: string;
-  amount: number;
-  method: PaymentMethod;
-  date: string;
-  status: TransactionStatus;
-  comment?: string;
-  adminComment?: string;
-  createdAt: string;
-}
-
-export interface AdminTransaction extends Transaction {
-  memberId: string;
-  memberName: string;
-  memberEmail: string;
-}
-
-export interface Message {
-  id: string;
-  sender: "member" | "admin";
-  senderName: string;
-  text: string;
-  timestamp: string;
-}
-
-export interface Thread {
-  id: string;
-  memberName: string;
-  lastMessage: string;
-  lastMessageAt: string;
-  unread: boolean;
 }
 
 export interface QAItem {
@@ -104,11 +63,4 @@ export interface Question {
 export interface Resource {
   label: string;
   url: string;
-}
-
-export interface NextSession {
-  title: string;
-  date: string;
-  time: string;
-  joinUrl: string;
 }

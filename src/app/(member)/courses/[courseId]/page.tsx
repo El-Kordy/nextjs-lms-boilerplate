@@ -44,7 +44,7 @@ export default async function CourseDetailPage({
   const hasAccess = true;
 
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={false} unreadMessages={3}>
+    <AppLayout user={CURRENT_USER} isAdmin={false}>
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Back */}
         <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>

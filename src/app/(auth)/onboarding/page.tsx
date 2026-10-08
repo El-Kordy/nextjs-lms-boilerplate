@@ -32,7 +32,7 @@ export default function OnboardingPage() {
             href="/dashboard"
             className="text-xl font-semibold tracking-tight"
           >
-            Foyzul&apos;s Circle
+            WNM Learning Platform
           </Link>
           <p className="mt-1 text-sm text-muted-foreground">
             Welcome! Let&apos;s set up your profile.
@@ -43,8 +43,7 @@ export default function OnboardingPage() {
           <CardHeader>
             <CardTitle className="text-lg">Complete your profile</CardTitle>
             <CardDescription>
-              This information helps Foyzul connect with you and verify your
-              membership.
+              Add a few details to personalize your learning experience.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -55,26 +54,6 @@ export default function OnboardingPage() {
                   id="phone"
                   type="tel"
                   placeholder="+880 1XXX-XXXXXX"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="bkash">bKash / Nagad number</Label>
-                <Input
-                  id="bkash"
-                  type="tel"
-                  placeholder="01XXX-XXXXXX"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Used for payment verification only
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="telegram">Telegram username</Label>
-                <Input
-                  id="telegram"
-                  placeholder="@yourusername"
                 />
               </div>
 

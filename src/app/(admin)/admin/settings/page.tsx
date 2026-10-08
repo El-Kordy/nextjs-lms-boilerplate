@@ -4,8 +4,8 @@ import { SettingsForm } from "@/features/settings/components/settings-form";
 
 // TODO: replace with real auth session
 const CURRENT_USER = {
-  name: "Foyzul Karim",
-  email: "foyzul@example.com",
+  name: "WNM Admin",
+  email: "admin@wnm.local",
   avatar: undefined,
 };
 
@@ -13,7 +13,7 @@ export default async function AdminSettingsPage() {
   const settings = await settingsService.getSettings();
 
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={true} unreadMessages={5}>
+    <AppLayout user={CURRENT_USER} isAdmin={true}>
       <div className="mx-auto max-w-2xl px-4 py-6 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>

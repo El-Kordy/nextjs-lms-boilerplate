@@ -41,8 +41,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const CURRENT_USER = {
-  name: "Foyzul Karim",
-  email: "foyzul@example.com",
+  name: "WNM Admin",
+  email: "admin@wnm.local",
   avatar: undefined,
 };
 
@@ -199,7 +199,7 @@ function AddVideoDialog() {
 
 export default function AdminVideoManagementPage() {
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={true} unreadMessages={5}>
+    <AppLayout user={CURRENT_USER} isAdmin={true}>
       <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Back */}
         <Button variant="ghost" size="sm" className="gap-1.5 -ml-2" asChild>

@@ -49,11 +49,11 @@ export default async function CourseVideoPage({
     currentIndex < allVideos.length - 1 ? allVideos[currentIndex + 1] : null;
 
   // TODO: replace with real auth/access check
-  const memberStatus = "active" as const;
-  const hasAccess = memberStatus === "active";
+  // TODO: replace with server-side enrollment/access check.
+  const hasAccess = true;
 
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={false} unreadMessages={3}>
+    <AppLayout user={CURRENT_USER} isAdmin={false}>
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
         {/* Breadcrumb */}
         <Breadcrumb>
@@ -82,7 +82,7 @@ export default async function CourseVideoPage({
         <div className="mt-6 flex flex-col gap-8 lg:flex-row">
           {/* Main column */}
           <div className="min-w-0 flex-1">
-            <VideoPlayer status={memberStatus} />
+            <VideoPlayer hasAccess={hasAccess} />
 
             {hasAccess && <MarkAsWatched />}
 
