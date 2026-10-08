@@ -1,10 +1,9 @@
 "use client";
 
 import {
-  Users,
-  Clock,
+  BookOpen,
   HelpCircle,
-  MessageCircle,
+  Users,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import {
@@ -15,23 +14,23 @@ import {
 } from "@/components/ui/card";
 
 const CURRENT_USER = {
-  name: "Foyzul Karim",
-  email: "foyzul@example.com",
+  name: "WNM Admin",
+  email: "admin@wnm.local",
   avatar: undefined,
 };
 
 const STATS = [
   {
-    label: "Active Members",
+    label: "Total Users",
     value: 45,
     icon: Users,
-    description: "Currently active subscriptions",
+    description: "Registered users",
   },
   {
-    label: "Pending Verifications",
+    label: "Published Courses",
     value: 3,
-    icon: Clock,
-    description: "Awaiting payment confirmation",
+    icon: BookOpen,
+    description: "Courses available on the platform",
   },
   {
     label: "Unanswered Questions",
@@ -39,28 +38,22 @@ const STATS = [
     icon: HelpCircle,
     description: "Across all courses",
   },
-  {
-    label: "Unread Messages",
-    value: 5,
-    icon: MessageCircle,
-    description: "From members",
-  },
 ];
 
 export default function AdminHomePage() {
   return (
-    <AppLayout user={CURRENT_USER} isAdmin={true} unreadMessages={5}>
+    <AppLayout user={CURRENT_USER} isAdmin={true}>
       <div className="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
             Admin Dashboard
           </h1>
           <p className="text-sm text-muted-foreground">
-            Overview of your community
+            Overview of the WNM learning platform
           </p>
         </div>
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {STATS.map((stat) => (
             <Card key={stat.label}>
               <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
@@ -69,10 +62,12 @@ export default function AdminHomePage() {
                 </CardTitle>
                 <stat.icon className="size-4 text-muted-foreground" />
               </CardHeader>
+
               <CardContent>
                 <p className="text-3xl font-semibold tracking-tight">
                   {stat.value}
                 </p>
+
                 <p className="mt-1 text-xs text-muted-foreground">
                   {stat.description}
                 </p>

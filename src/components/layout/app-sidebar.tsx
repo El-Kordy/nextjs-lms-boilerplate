@@ -31,7 +31,6 @@ interface SidebarUser {
 interface AppSidebarProps {
   isAdmin?: boolean;
   user: SidebarUser;
-  unreadMessages?: number;
 }
 
 function NavLink({
@@ -88,7 +87,7 @@ function SidebarContent({
           href="/dashboard"
           className="text-lg font-semibold tracking-tight"
         >
-          Foyzul&apos;s Circle
+          WNM
         </Link>
       </div>
 
@@ -156,12 +155,8 @@ function SidebarContent({
   );
 }
 
-export function AppSidebar({ isAdmin, user, unreadMessages }: AppSidebarProps) {
-  const navItems = memberNav.map((item) =>
-    item.label === "Messages" && unreadMessages
-      ? { ...item, badge: unreadMessages }
-      : item
-  );
+export function AppSidebar({ isAdmin, user }: AppSidebarProps) {
+  const navItems = memberNav;
 
   return (
     <>
@@ -201,7 +196,7 @@ export function AppSidebar({ isAdmin, user, unreadMessages }: AppSidebarProps) {
           </SheetContent>
         </Sheet>
         <Link href="/dashboard" className="text-base font-semibold tracking-tight">
-          Foyzul&apos;s Circle
+          WNM
         </Link>
       </div>
     </>

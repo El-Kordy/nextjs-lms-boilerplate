@@ -91,7 +91,7 @@ const mockQAItems: QAItem[] = [
       "When using AI for code review, how do you handle false positives? Sometimes Claude flags code that's actually fine.",
     askedAt: "2 days ago",
     answer: {
-      author: { name: "Foyzul" },
+      author: { name: "WNM Instructor" },
       text: "Great question. In practice, I treat AI reviews as suggestions, not mandates.",
       answeredAt: "1 day ago",
     },
@@ -110,7 +110,7 @@ const mockQAItems: QAItem[] = [
       "Could you share the repository link for the production code example you showed at 12:30?",
     askedAt: "1 day ago",
     answer: {
-      author: { name: "Foyzul" },
+      author: { name: "WNM Instructor" },
       text: "Added to the resource links above. Check the GitHub link.",
       answeredAt: "1 day ago",
     },

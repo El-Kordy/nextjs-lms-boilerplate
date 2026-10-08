@@ -68,7 +68,7 @@ export function SettingsForm({ settings }: { settings: SiteSettings }) {
             <Label htmlFor="announcement">Announcement</Label>
             <Textarea
               id="announcement"
-              placeholder="Write an announcement to show on the member dashboard..."
+              placeholder="Write an announcement to show on the student dashboard..."
               defaultValue={settings.announcement}
               className="min-h-[80px] resize-none"
             />

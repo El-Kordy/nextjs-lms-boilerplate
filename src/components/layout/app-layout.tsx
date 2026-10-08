@@ -8,22 +8,16 @@ interface AppLayoutProps {
     email: string;
     avatar?: string;
   };
-  unreadMessages?: number;
 }
 
 export function AppLayout({
   children,
   isAdmin,
   user,
-  unreadMessages,
 }: AppLayoutProps) {
   return (
     <div className="flex min-h-dvh">
-      <AppSidebar
-        isAdmin={isAdmin}
-        user={user}
-        unreadMessages={unreadMessages}
-      />
+      <AppSidebar isAdmin={isAdmin} user={user} />
       <main className="flex-1 overflow-x-hidden">{children}</main>
     </div>
   );
