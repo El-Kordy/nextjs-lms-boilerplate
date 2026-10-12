@@ -87,6 +87,79 @@ Administrators should eventually be able to:
 
 ---
 
+# 2A. Additional Approved V1 Content Domains
+
+In addition to the core LMS, Learning Paths, limited diagnostic assessments, and Q&A described above, WNM V1 includes the following approved content and authoring domains. Their implementation is planned, not completed.
+
+## 2A.1 Blog
+
+The Blog is a distinct publishing domain for articles and posts. It must not be modeled as a Course or Lesson merely because it uses the shared rich-text authoring foundation.
+
+Blog content requires its own domain lifecycle, publication rules, routes, permissions, and content metadata. The initial editor scope is deliberately minimal: paragraphs, headings, bold/italic, lists, links, quotes, and images. Arbitrary user-supplied HTML is not allowed.
+
+Registered-user discussion on a Blog article may use the shared, content-scoped Q&A/discussion capability subject to authorization and moderation.
+
+## 2A.2 Knowledge Base
+
+The Knowledge Base is a distinct knowledge and documentation domain. It must retain its own article structure, navigation, access rules, publication lifecycle, and policy-related behavior rather than being treated as Blog content or lesson content.
+
+Approved V1 reading/navigation requirements include breadcrumbs, reading time, a back-to-top control, section navigation with icons and an active-heading indication, and load-more behavior where applicable.
+
+The initial Knowledge Base editor scope is deliberately minimal: paragraphs, headings, bold/italic, lists, links, quotes, and images. Arbitrary user-supplied HTML is not allowed.
+
+The following previously approved Knowledge Base policy capabilities remain in scope and must not be silently dropped:
+- emergency access to confidential policies, following the approved Option C decision;
+- reusable policy templates, following the approved Option C decision;
+- bulk policy-acknowledgment assignments, following the approved Option C decision.
+
+These requirements do not authorize building a broad enterprise governance or incident-management suite. AI features remain deferred to V2. Confidential-policy access must be explicitly authorized and appropriately recorded; exact operational details must be settled before implementation where not already documented.
+
+Registered-user discussion is scoped to an individual Knowledge Base article in V1. Series-wide discussion is not required for the initial release.
+
+## 2A.3 Forms
+
+Forms are an approved V1 domain and must have their own validation, submission, authorization, and lifecycle rules. Preserve the explicitly approved Option A closed-form behavior and the previously approved simple styling requirements. Do not invent additional form capabilities or treat approval of the domain as evidence that forms have been implemented.
+
+Any form that handles sensitive or restricted data must enforce access and validation on the server. The precise field catalog and any behavior not explicitly captured in the approved requirements must be resolved before implementation.
+
+## 2A.4 Visual Page Builder
+
+The approved V1 page builder supports both template-based starting points and a blank canvas for authorized advanced editors. It is a controlled page-composition capability, not permission to execute arbitrary HTML, scripts, or unsafe embeds.
+
+Available blocks and editing capabilities must be governed by explicit permissions. The UI must not be the security boundary: the server must validate page mutations, block types, references, and publication actions.
+
+## 2A.5 Shared Authoring Foundation
+
+A reusable Tiptap-based authoring foundation is intended to serve Lessons, Blog articles, and Knowledge Base articles while keeping their domain models and rules separate.
+
+The implementation sequence distinguishes:
+- lesson-editor integration needed by the core LMS; and
+- completion of the reusable, content-specific authoring foundation and its Blog/Knowledge Base integrations.
+
+The shared editor must use structured Tiptap JSON, an explicitly approved extension inventory, server-side validation, safe URL/embed handling, and a defined rendering/sanitization policy. Do not accept arbitrary HTML as canonical content.
+
+Native Tiptap extensions must be distinguished from custom WNM blocks. Before adding or installing any dependency, verify its license, maintenance/compatibility, and free/open-source suitability. No dependency installation is authorized by this specification alone.
+
+## 2A.6 Shared Content Q&A and Discussion
+
+The Q&A/discussion capability must be reusable across Lessons, Blog articles, and Knowledge Base articles, with each discussion explicitly scoped to its parent content resource. It remains separate from global/private Chat, which is deferred.
+
+Participation, replies, edits, deletion, moderation, and visibility must be permission-checked server-side. Students must not receive authoring or moderation powers merely because they can read published content. Moderators do not receive general content-authoring rights by default; additional permissions must be granted explicitly.
+
+## 2A.7 Collaboration and Permission Safeguards
+
+Approved collaboration/commenting capabilities and safeguards must be implemented with explicit resource/action permissions. Instructors receive the standard teaching/authoring capabilities intended for their assigned content; restricted blocks require explicit permission. Administrators grant role- or user-specific permissions as defined by the authorization model. Hiding controls in the client is not sufficient authorization.
+
+## 2A.8 Scope and Status Rule
+
+All domains in this section are approved V1 requirements, but remain planned until implementation is actually completed and verified. AI remains deferred to V2. Support, global/private Chat, payments, self-hosted protected video, and other explicitly deferred capabilities remain deferred unless separately approved.
+
+---
+
+The V1 scope also includes the Blog, Knowledge Base, Forms, the controlled visual page builder, shared content-scoped discussions, and the shared authoring requirements defined in Section 2A.
+
+---
+
 # 3. Explicitly Deferred
 
 The following are not part of the current MVP implementation unless explicitly included by the V1 assessment/path decisions below.
@@ -567,6 +640,8 @@ Course
 ---
 
 ## 15.1 Current Provider
+
+V1 supports YouTube and supported external video URLs. Video remains separate from the lesson's structured content. Validate provider and URL behavior server-side.
 
 The current provider is:
 
@@ -2291,15 +2366,18 @@ Centralize:
 
 ### Step 7 — Build the real LMS foundation
 
-Implement:
+Implement the core lesson integration needed for the LMS:
 
 * courses;
 * chapters;
 * lessons;
-* Tiptap content;
-* YouTube;
+* lesson Tiptap content using the approved lesson inventory;
+* YouTube and supported external video URLs;
+* the approved 17-minute-30-second maximum video duration;
 * enrollment;
 * progress.
+
+This step does not, by itself, mean the reusable authoring foundation for Blog and Knowledge Base is complete.
 
 ### Step 8 — Build Learning Paths
 
@@ -2337,7 +2415,21 @@ Implement:
 * moderation;
 * authorization.
 
-### Step 11 — Production hardening
+### Step 11 — Complete shared authoring and approved content modules
+
+Complete the reusable authoring foundation and the approved V1 content domains:
+
+* shared Tiptap foundation for Lessons, Blog, and Knowledge Base, with distinct domain policies;
+* Blog publishing and article-scoped discussion;
+* Knowledge Base articles, reading/navigation features, approved policy capabilities, and article-scoped discussion;
+* Forms with the approved closed-form behavior and server-side validation;
+* the controlled visual page builder, templates, blank canvas, and permission-checked blocks;
+* approved collaboration/commenting safeguards;
+* dependency license and compatibility verification before any installation.
+
+AI remains deferred to V2. Do not implement or install dependencies solely because they appear in the editor inventory.
+
+### Step 12 — Production hardening
 
 Then address:
 
