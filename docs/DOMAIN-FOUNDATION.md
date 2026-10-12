@@ -150,6 +150,19 @@ Participation, replies, edits, deletion, moderation, and visibility must be perm
 
 Approved collaboration/commenting capabilities and safeguards must be implemented with explicit resource/action permissions. Instructors receive the standard teaching/authoring capabilities intended for their assigned content; restricted blocks require explicit permission. Administrators grant role- or user-specific permissions as defined by the authorization model. Hiding controls in the client is not sufficient authorization.
 
+
+## 2A.9 Shared Authoring Permission Rules
+
+The shared authoring foundation is a reusable editor and content-block system, not a shared authorization shortcut. Lessons, Blog posts, Knowledge Base articles, Forms, and visual-builder pages may reuse editor infrastructure while retaining separate domain rules, publication workflows, visibility rules, and action permissions.
+
+* Students are read-only for published learning and editorial content. They receive no authoring UI or authoring API access by default.
+* Instructors may author only within explicitly assigned resources and only for content types and actions granted to them.
+* Moderators receive moderation capabilities only; authoring and publishing are not implied.
+* Admins grant role-level or user-specific capabilities within their own authority. A user-specific grant must be explicit, scoped, revocable, and auditable.
+* Restricted blocks require an explicit permission check for the acting user and target content. Client-side hiding is only a usability measure; the server must reject unauthorized block creation, updates, rendering-sensitive operations, and submissions.
+* A template, copied page, or duplicated content item must not silently carry permissions that expand access to the new resource.
+* The server must validate block type, block configuration, embedded resource references, and permitted state transitions. Arbitrary scripts and unsafe HTML remain outside the approved authoring model.
+
 ## 2A.8 Scope and Status Rule
 
 All domains in this section are approved V1 requirements, but remain planned until implementation is actually completed and verified. AI remains deferred to V2. Support, global/private Chat, payments, self-hosted protected video, and other explicitly deferred capabilities remain deferred unless separately approved.
@@ -387,6 +400,59 @@ This includes:
 * learning path management;
 * path/course relationship management.
 
+
+## 6.1 Explicit Role and Permission Requirements
+
+The role names below are broad responsibility groups, not automatic grants of every capability associated with a screen. A user may hold multiple roles. Effective access is the union of explicitly granted capabilities, constrained by resource ownership, assignment, publication state, and any more restrictive resource-level rules.
+
+### Student
+
+Students may:
+* browse and read published courses, Learning Paths, lessons, Blog posts, and Knowledge Base articles available to them;
+* enroll and access learning content according to the applicable enrollment and publication rules;
+* update their own permitted profile fields and their own learning progress;
+* create questions, replies, comments, or form submissions only where the relevant feature is enabled and the student is authorized.
+
+Students must not create, edit, publish, delete, or administer learning content; manage users or roles; access other users' private data; or change authoritative progress, assessment scores, or permissions by manipulating client requests.
+
+### Instructor
+
+Instructors may create and manage courses and learning content explicitly assigned to them, subject to the content's status and the permissions granted for that resource. The intended teaching scope includes assigned courses, chapters, lessons, lesson resources, course-related Q&A, and relevant learner-facing course updates.
+
+Instructor access does not automatically grant global administration, role management, access to unrelated courses, or permission to edit every restricted block. Creating or editing Blog posts, Knowledge Base articles, Forms, page-builder pages, policy content, or restricted editor blocks requires the corresponding capability and resource scope to be granted explicitly.
+
+### Moderator
+
+Moderators may perform the moderation actions explicitly granted for the relevant discussion or content scope, such as reviewing, hiding, restoring, or escalating user-generated contributions where those actions are supported. Moderator status does not grant authoring, publishing, course ownership, role management, or unrestricted content editing by default.
+
+### Support
+
+Support users receive only the support and account-assistance capabilities explicitly assigned to them. Support status does not grant unrestricted access to private learner content, assessment answers, confidential policy content, or administrative settings. Any exceptional access must be purpose-limited and auditable.
+
+### Admin and Super Admin
+
+Admins may manage users, roles, permissions, publication, and platform content only within the administrative capabilities assigned to them. Super Admin is the highest application-level administrative role, but sensitive operations must still be authenticated, explicitly authorized, validated, and audited where appropriate. Role assignment must not allow an administrator to grant privileges beyond their own authority unless that delegation is explicitly approved by the project owner.
+
+### Resource and action permissions
+
+Authorization decisions must consider both the action and the target resource. Examples include:
+* `course.read`, `course.create`, `course.update`, `course.publish`, and `course.delete`;
+* `lesson.create`, `lesson.update`, `lesson.publish`, and `lesson.delete`;
+* `content.block.use` or an equivalent explicit permission for restricted authoring blocks;
+* `discussion.reply`, `discussion.moderate`, and `discussion.manage`;
+* `assessment.manage`, `assessment.attempt`, and `assessment.review`;
+* `user.manage`, `role.assign`, `permission.grant`, and `settings.manage`.
+
+These names are illustrative capability identifiers, not a mandate to adopt this exact string enum. The final permission catalogue should be explicit and testable. Checks must be enforced in server-side services/actions and data access paths; hiding a button or editor block in the client is not an authorization boundary.
+
+### Permission changes and restricted operations
+
+* Deny by default when a required permission or resource relationship cannot be established.
+* Verify resource scope on every read and mutation, including nested resources and submitted identifiers.
+* Validate role and permission changes server-side, prevent unauthorized privilege escalation, and record sensitive changes in the audit trail.
+* Treat imported, copied, duplicated, or template-derived content as subject to the destination resource's permissions; permissions must not be inherited accidentally from the source.
+* Test both allowed and denied cases for each role, action, and resource scope.
+
 ---
 
 # 7. Course Domain
@@ -491,6 +557,20 @@ This permits:
 The exact V1 rule for whether a course must have one or may have multiple instructors is still subject to final product approval.
 
 The relationship should nevertheless be designed so that it does not require a future destructive migration to support multiple instructors.
+
+
+## 9.1 Instructor Scope and Course Authorization
+
+The CourseInstructor relationship establishes an instructor's resource scope; the presence of an instructor role alone does not authorize access to every course.
+
+For course and lesson operations, the server must verify:
+* that the user is authenticated and has the required action permission;
+* that the target course is assigned to the instructor, or that a separate explicit administrative permission authorizes the operation;
+* that the chapter, lesson, resource, assessment, or Q&A item belongs to the authorized course scope;
+* that the requested state transition (for example, draft to published) is permitted;
+* that any restricted block or sensitive action has its own required capability.
+
+An instructor must not gain access to another instructor's unpublished content by changing a URL, record ID, parent ID, or client-supplied ownership field. Ownership/assignment checks must be performed server-side for both reads and writes. Administrative access and instructor access should remain separate capabilities so that granting teaching duties does not accidentally grant platform-wide administration.
 
 ---
 
@@ -1286,6 +1366,14 @@ A Course or Learning Path may have no assessment.
 The initial V1 scope should support an optional final assessment rather than a general quiz engine attached to every lesson.
 
 ---
+
+
+### Assessment Authorization
+
+Assessment authoring and administration require explicit permissions scoped to the owning Course or Learning Path. Instructors may manage assessments only when assigned to the owning resource and granted assessment-management permission. Students may create attempts only for assessments available to them under the applicable publication and access rules.
+
+Correct answers, scoring rules, answer keys, and other assessment-authoring data must not be exposed to students before or during an attempt unless a specific approved review behavior requires it. Attempt creation, submission, timing enforcement, scoring, retakes, and result access must be validated server-side. A client-supplied score, completion state, attempt owner, or assessment owner is never authoritative.
+
 
 ## 27.2 Assessment
 
