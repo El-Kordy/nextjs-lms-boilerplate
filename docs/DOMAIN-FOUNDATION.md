@@ -1,6 +1,6 @@
 # WNM LMS — Domain Foundation Specification
 
-**Status:** Draft — pending architecture review
+**Status:** Draft — pending final project-owner approval
 **Project:** WNM Learning Platform
 **Architecture:** Next.js modular monolith
 **Database:** PostgreSQL + Drizzle ORM — planned
@@ -493,9 +493,7 @@ This permits:
 * future reassignment;
 * explicit ownership checks.
 
-The exact V1 rule for whether a course must have one or may have multiple instructors is still subject to final product approval.
-
-The relationship should nevertheless be designed so that it does not require a future destructive migration to support multiple instructors.
+V1 supports zero, one, or multiple assigned instructors per course. Instructor assignment is represented through `CourseInstructor`; assignment grants resource scope, not global administration. Server-side authorization must verify assignment and any required action-specific permission.
 
 
 ## 9.1 Instructor Scope and Course Authorization
@@ -773,7 +771,7 @@ This provides the foundation for:
 * future paid-course access;
 * future entitlement rules.
 
-The exact enrollment statuses and whether every free published course requires explicit enrollment are still product decisions to finalize before schema implementation.
+V1 enrollment statuses are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`. Full course access requires an active enrollment unless the course explicitly enables a public preview. Public preview grants access only to the configured preview content; it does not silently enroll the learner or grant access to the full course. Learning Paths do not automatically enroll learners in their courses.
 
 ---
 
@@ -911,7 +909,7 @@ RESOLVED
 HIDDEN
 ```
 
-The final state set will be approved before schema implementation.
+The V1 question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`. Keep display labels localizable. A question may be edited by its author only while it is open and has no accepted answer; deletion requests must preserve replies and audit history through moderation or soft deletion when needed.
 
 ---
 
@@ -1233,17 +1231,7 @@ Paths
 
 ## 26.7 Learning Path Publication and Course Status
 
-The final behavior when a course inside a published path later becomes `DRAFT` or `ARCHIVED` is still an explicit schema/product decision.
-
-The system must define this before production implementation.
-
-The preferred principle is:
-
-> A published path must not silently promise access to content the student cannot access.
-
-Possible implementation policies include hiding unavailable courses from the public path, showing them as unavailable, or preventing publication/archiving transitions under specific conditions. The final rule must be selected before implementation.
-
-V1 should allow paths to be built from existing published courses.
+A Learning Path has `DRAFT`, `PUBLISHED`, or `ARCHIVED` status. Publishing a path requires its included courses to be published. If an included course later becomes `DRAFT` or `ARCHIVED`, retain its ordered path relationship, show the course as unavailable to students, and flag the path for editorial review rather than silently promising access. V1 paths are built from existing published courses.
 
 ---
 
@@ -1330,7 +1318,7 @@ Assessment
 └── timestamps
 ```
 
-The exact physical ownership model will be finalized during schema design. The important domain rule is that an assessment belongs to exactly one supported owner type: Course or Learning Path.
+An assessment belongs to exactly one supported owner type: Course or Learning Path. V1 permits at most one optional final diagnostic assessment per Course and at most one per Learning Path. Enforce this invariant in the domain/service layer and database design where practical.
 
 The assessment should be independently publishable/configurable according to the permissions of the owning Course/Path.
 
