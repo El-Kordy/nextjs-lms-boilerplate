@@ -362,6 +362,48 @@ There will be no generic global `Messages` system for this purpose.
 
 ---
 
+# 10A. Approved V1 Content Modules
+
+The following are approved V1 requirements. They are planned work, not completed implementation.
+
+## Blog
+
+- A distinct Blog publishing domain with its own content lifecycle, routes, metadata, and permissions.
+- A minimal rich-text editor: paragraphs, headings, bold/italic, lists, links, quotes, and images.
+- Article-scoped discussion using the shared content Q&A capability.
+- Arbitrary user-supplied HTML is not allowed.
+
+## Knowledge Base
+
+- A distinct Knowledge Base domain with its own article structure, publication/access rules, and policy behavior.
+- Reader experience: breadcrumbs, reading time, back-to-top, section navigation with icons and active-heading indication, and load-more behavior where applicable.
+- Minimal editor: paragraphs, headings, bold/italic, lists, links, quotes, and images; no arbitrary user-supplied HTML.
+- Preserve approved Option C decisions: emergency access to confidential policies, reusable policy templates, and bulk policy-acknowledgment assignments.
+- Keep the module practical; do not expand it into a broad enterprise governance/incident-management suite.
+- AI remains deferred to V2.
+- V1 discussions are scoped to an individual article; series-wide discussion is optional future work.
+
+## Forms and visual page builder
+
+- Forms are in V1 and must preserve the approved Option A closed-form behavior and approved simple styling requirements. Validate submissions and authorization on the server.
+- The visual page builder supports templates and a blank canvas for authorized advanced editors.
+- Block availability and page mutations require explicit permissions and server-side validation. The page builder must not permit arbitrary scripts or unsafe HTML.
+
+## Shared authoring and discussion
+
+- Reuse a Tiptap-based authoring foundation across Lessons, Blog, and Knowledge Base while keeping their domain models, publication rules, and permissions distinct.
+- Use structured Tiptap JSON, the approved extension inventory, safe URL/embed handling, server-side validation, and a defined sanitization/rendering policy.
+- Distinguish native Tiptap extensions from custom WNM blocks. Verify free/open-source licenses and compatibility before installing dependencies. This plan does not authorize installation.
+- Q&A/discussion is content-scoped and reusable across Lessons, Blog articles, and Knowledge Base articles. It remains separate from deferred global/private Chat.
+- Students are read-only for published content. Moderators do not receive authoring rights by default. Restricted blocks require explicit role/user permission; client-side hiding is not a security boundary.
+- Approved collaboration/commenting capabilities must include explicit authorization safeguards.
+
+## Video duration
+
+The approved maximum video duration is **17 minutes and 30 seconds (17:30)**. V1 supports YouTube and supported external video URLs; protected self-hosted video remains deferred.
+
+---
+
 # 11. Support System
 
 Support will be a **future first-class module**.
@@ -991,19 +1033,34 @@ Later:
 
 ---
 
-## Phase 3 — Q&A
+## Phase 3 — Q&A and shared discussion
 
 Later:
 
-* Questions
-* Replies
-* Moderation
-* Reporting
+* Lesson/course questions and replies
+* Article-scoped discussion for Blog and Knowledge Base
+* Moderation and reporting
 * Instructor participation
+* Server-side content-scoped authorization
 
 ---
 
-## Phase 4 — Production
+## Phase 4 — Blog, Knowledge Base, Forms, and authoring
+
+Later:
+
+* Blog publishing and minimal editor integration
+* Knowledge Base article publishing and reading/navigation experience
+* Approved Knowledge Base policy capabilities
+* Forms with approved closed-form behavior
+* Visual page builder with templates and blank canvas for authorized advanced editors
+* Shared Tiptap authoring foundation and content-specific policies
+* Approved collaboration/commenting safeguards
+* Free/open-source license and compatibility verification before dependency installation
+
+---
+
+## Phase 5 — Production
 
 Later:
 
@@ -1020,7 +1077,7 @@ Later:
 
 ---
 
-## Phase 5 — Post-Launch
+## Phase 6 — Post-Launch
 
 Only after real users exist, prioritize based on actual needs:
 
@@ -1078,6 +1135,10 @@ If the answer is no, keep it deferred.
 * MVP-first development strategy agreed
 * Learning Paths approved as a V1 feature
 * Diagnostic assessment concept approved as a V1 feature
+* Blog and Knowledge Base approved as V1 content domains
+* Forms and controlled visual page builder approved for V1
+* Shared content-scoped discussions approved for Lessons, Blog articles, and Knowledge Base articles
+* Shared Tiptap authoring direction and approved inventory decisions recorded; implementation and dependency verification remain pending
 * Future AI/RAG direction approved as an architectural capability, not a V1 dependency
 
 ### In Progress
@@ -1097,12 +1158,18 @@ If the answer is no, keep it deferred.
 * Progress
 * Learning Paths
 * Diagnostic assessments
-* Q&A
+* Q&A and content-scoped discussions
+* Blog
+* Knowledge Base and approved policy capabilities
+* Forms
+* Visual page builder and approved collaboration safeguards
+* Shared authoring foundation
 * Production deployment
 
 ### Intentionally Deferred
 
 * Support implementation
+* AI features (V2)
 * Self-hosted protected video
 * Paid-course infrastructure
 * Chat
