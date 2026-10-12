@@ -2244,9 +2244,9 @@ These defaults settle the decisions explicitly listed above, but they are not su
 
 ---
 
-## 53A. Remaining Schema-Affecting Decisions
+## 53A. Schema-Affecting Decisions and V1 Defaults
 
-The following decisions are not settled by the current approved defaults. Do not silently invent a rule during schema implementation. Resolve each decision in this specification and the Project Plan, or record an explicit project-owner-approved deferral before finalizing the affected tables and constraints.
+This section records the V1 defaults for schema-affecting decisions. These are domain requirements for planning and review, not permission to skip implementation approval, security review, tests, or migration QA. Jurisdiction-specific retention periods remain open pending privacy review; do not invent a fixed duration.
 
 1. **Re-enrollment history — V1 default:** Each new enrollment episode creates a new Enrollment row; do not reactivate or overwrite a prior `WITHDRAWN` or `COMPLETED` episode. Keep prior episode timestamps/status and related attempts/audit history. Enforce at most one current `ACTIVE` enrollment per user/course, while allowing multiple historical episodes. Re-enrollment does not restore prior progress automatically; lesson completion remains tied to the learner and lesson unless a separately approved rule says otherwise.
 2. **Course completion after edits — V1 default:** Current completion is derived from the currently required lessons. If an authorized edit adds a required lesson the learner has not completed, current completion becomes incomplete and current progress is recalculated. Preserve the fact and timestamp of an earlier completion as historical evidence; do not erase the prior completion event or imply that the learner never completed the earlier course version. A separate certificate/credential system is not implied by this rule.
