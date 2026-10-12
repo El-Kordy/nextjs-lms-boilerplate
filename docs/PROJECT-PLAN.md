@@ -258,6 +258,19 @@ Roles are separate from resource/action permission grants. Grants must be scoped
 
 Better Auth owns authentication identities, credentials, and sessions. WNM owns application roles, permissions, profile data, and domain relationships. Better Auth's required schema/migration behavior must be verified during implementation; Drizzle owns WNM domain tables and migrations, without competing ownership of the same tables.
 
+
+## 6.2 Approved Domain Defaults
+
+These defaults align with `docs/DOMAIN-FOUNDATION.md`. They define intended behavior; they do not claim implementation is complete.
+
+- **Course instructors:** A course may have zero, one, or multiple assigned instructors through a relationship. Instructor role membership alone does not grant access to every course; enforce assigned-resource scope and action permissions server-side.
+- **Enrollment and previews:** Full course access requires active enrollment unless a course explicitly configures public preview. Preview access is limited to configured content and does not create full enrollment. Enrollment statuses are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`; retain history and attempts.
+- **Lessons and progress:** A lesson may be content-only, video-only, or both, but must have at least one valid learning payload before publication. Video duration is capped at 1,050 seconds. Derive course progress/completion from required lesson progress; assessments are not completion gates.
+- **Learning Paths:** Statuses are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. A published path contains published courses and never auto-enrolls students. If an included course later becomes unavailable, preserve the path relationship, deny access to that course, and flag the path for editorial review.
+- **Diagnostic assessments:** At most one optional final diagnostic assessment per course and per path in V1. Support single-choice and multiple-choice auto-scored questions, immutable attempt snapshots, unlimited retakes by default, deterministic weighting toward weak topics, and optional timed mode disabled by default. No pass/fail completion gate.
+- **Q&A lifecycle:** Question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`. Author edits are limited to open questions without an accepted answer. Preserve replies, moderation history, and audit context through soft deletion/moderation where needed.
+- **Data conventions:** Use UUIDs for WNM domain IDs by default, UTC timezone-aware timestamps, foreign keys and appropriate relationship/slug uniqueness, and archive/status transitions for history-bearing records. Better Auth owns its auth schema/migrations; Drizzle owns WNM domain tables/migrations.
+
 # 7. Learning Architecture
 
 The core learning structure will be:
