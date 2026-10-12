@@ -218,50 +218,13 @@ The architecture may reserve boundaries for future features, but their implement
 
 ## 4.1 User
 
-The system has one primary identity entity:
+The system has one primary identity entity: `User`. A user represents one person who can interact with WNM. A person must not need duplicate accounts to perform more than one responsibility.
 
-`User`
-
-A user represents a person who can interact with WNM.
-
-The current legacy model:
-
-```ts
-role: string
-```
-
-must not survive into the production domain model.
-
-A user may have multiple roles.
-
-Examples:
-
-* STUDENT
-* INSTRUCTOR
-* MODERATOR
-* SUPPORT
-* ADMIN
-* SUPER_ADMIN
-
-A user may therefore be both:
-
-```text
-STUDENT + INSTRUCTOR
-```
-
-or:
-
-```text
-INSTRUCTOR + MODERATOR
-```
-
-without requiring duplicate user accounts.
-
----
+The legacy single-field model `role: string` must not survive into the production domain model.
 
 ## 4.2 Roles
 
-The planned role set is:
+The approved role set is:
 
 ```text
 SUPER_ADMIN
@@ -272,54 +235,30 @@ SUPPORT
 STUDENT
 ```
 
-Roles describe broad capabilities.
+Roles describe broad responsibility groups; they do not replace permission checks. A user may hold multiple roles, including STUDENT + INSTRUCTOR or INSTRUCTOR + MODERATOR.
 
-Roles do not replace permission checks.
+## 4.3 UserRole and Permission Grants
 
-Application authorization should ultimately be based on permissions/capabilities rather than scattered checks such as:
+Use a many-to-many UserRole relationship. Keep role assignment separate from resource/action permission grants. A permission grant may be role-based or user-specific and, where applicable, must identify its resource scope and allowed action.
 
-```ts
-user.role === "admin"
-```
+Deny by default when authorization cannot be established. Users may not grant themselves roles or permissions. Only an existing SUPER_ADMIN may grant or revoke SUPER_ADMIN; these changes must be audited. No actor may grant privileges beyond their own authority unless an explicitly approved delegation rule permits it.
 
----
-
-## 4.3 UserRole
-
-Production authorization requires a many-to-many relationship:
-
-```text
-User
-  |
-  +--- UserRole --- Role
-```
-
-This allows one user to have multiple roles.
-
-The exact physical implementation of the Role entity/table will be finalized during schema design.
-
-The important domain rule is:
-
-> A user must not be represented by one hard-coded role field.
-
----
+The exact physical Role table representation and permission catalog are implementation details; the domain requirements above are fixed.
 
 ## 4.4 Account Status
 
-The domain should support account lifecycle management independently of roles.
+Account status is independent of role assignment and uses these initial values:
 
-Examples include:
+- `PENDING`: registration or required account activation/approval is incomplete.
+- `ACTIVE`: the account may operate within its permissions.
+- `SUSPENDED`: access is temporarily blocked pending review or reinstatement.
+- `DISABLED`: access is administratively disabled.
 
-```text
-ACTIVE
-SUSPENDED
-```
+New accounts must not receive privileged roles merely because they registered. Suspended or disabled accounts must not be able to perform authenticated application actions. Status changes must not silently delete role assignments or learning history; sensitive administrative changes must be audited.
 
-The exact final enum/value set will be finalized during schema design.
+## 4.5 Profile Boundaries
 
-Suspending a user must not require changing or deleting their roles.
-
----
+Email and authentication credentials/session data belong to the authentication identity boundary and must follow the selected Better Auth integration. The WNM profile may contain a display name and optional avatar, phone number, locale, and time-zone preference. Phone is optional and must not be required for registration or ordinary learning access unless a separately approved requirement establishes that need. Avoid collecting profile fields without a product purpose.
 
 # 5. Authentication Boundary
 
@@ -2272,80 +2211,77 @@ Everything else should justify its existence before entering the first productio
 
 ---
 
-# 53. Decisions Still Requiring Approval
+# 53. Schema Decisions and Approved Defaults
 
-Before the final Drizzle schema, the following decisions must be explicitly settled:
+The following defaults resolve the initial schema-affecting questions so database design can proceed without repeatedly reopening settled choices. They are product/domain defaults, not a claim that the database or features have been implemented. A future change should be recorded explicitly in the Project Plan and this specification before it changes the schema.
 
-### Identity
+## Identity and authorization
 
-* exact account status values;
-* whether phone is optional;
-* profile field boundaries;
-* final role storage model.
+- Account status values are `PENDING`, `ACTIVE`, `SUSPENDED`, and `DISABLED`, as defined in Section 4.
+- Phone, avatar, locale, and time-zone preference are optional profile fields. Do not require phone for registration.
+- A user may hold multiple roles through a many-to-many UserRole relationship.
+- Role-based and user-specific permission grants are separate from role membership and must be scoped, revocable, and auditable where appropriate.
+- Only an existing SUPER_ADMIN may grant or revoke SUPER_ADMIN. No self-granting or privilege escalation is permitted.
+- Better Auth owns authentication identities, credentials, and sessions; WNM owns application roles, permissions, profile data, and domain relationships.
 
-### Course
+## Courses, instructors, categories, and language
 
-* final course status values;
-* whether `ARCHIVED` is required;
-* one vs multiple instructors in V1;
-* slug strategy;
-* category management;
-* course language/localization strategy.
+- Course status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Draft and archived courses are not generally available to students. Archiving is preferred to destructive deletion for courses with learning history.
+- A course may have multiple assigned instructors in V1. Store assignments as a relationship, not as a single instructor field. Each instructor may manage only courses and resources within their granted scope.
+- Course slugs are unique, normalized URL identifiers. Slug changes must not silently change ownership or authorization; redirects/aliases may be added if needed, but are not required for the first schema.
+- Categories are reusable entities, and course/category membership is many-to-many. Category management is restricted to authorized staff.
+- Store the primary content language as a locale/language code. Arabic is the initial default. Do not build a full translation/versioning subsystem for V1; mixed Arabic/English content and native RTL support are required.
 
-### Learning
+## Enrollment, lessons, progress, and deletion
 
-* whether enrollment is mandatory for free courses;
-* enrollment status values;
-* lesson content rules;
-* whether a lesson may be content-only, video-only, or both;
-* course completion behavior after structural updates;
-* deletion/archive behavior.
+- Enrollment is required for full access to a course unless a specific course or lesson is explicitly configured as a public preview. Learning Paths do not automatically enroll students.
+- Enrollment status values are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`. Enrollment history is retained; a withdrawn student may be re-enrolled without deleting prior attempts or audit history.
+- A lesson may be content-only, video-only, or contain both structured content and a supported video. It must have at least one valid learning payload before publication. Video duration must not exceed 17 minutes and 30 seconds (1050 seconds).
+- Lesson completion is recorded per user and lesson. Course completion is derived from the course's required lessons and the learner's completion records, rather than stored video counters. If required course structure changes, recompute derived completion/progress consistently; preserve historical assessment attempts.
+- Prefer archive/status transitions over hard deletion for published courses, lessons, paths, assessments, or content referenced by learner history. Hard deletion is reserved for unreferenced drafts or legally/operationally required erasure and must respect foreign-key and audit requirements.
 
-### Learning Paths
+## Learning Paths
 
-* final path status values;
-* final slug rules;
-* exact behavior when a published course later becomes draft/archived;
-* whether a path may contain only published courses at publication time;
-* exact path deletion/archive behavior.
+- Path status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Path slugs are unique normalized URL identifiers.
+- A path may contain only published courses when it is published. Adding a course to a path does not enroll a student.
+- If a course in a published path later becomes draft or archived, keep the path record intact, make the unavailable course inaccessible to students, and flag the path for authorized editorial review. Do not silently publish draft content or automatically change student enrollment.
+- Archiving a path removes it from ordinary student discovery but preserves its relationships and progress context.
 
-### Assessments
+## Diagnostic assessments
 
-* exact assessment status values;
-* whether V1 permits one assessment per Course/Path or multiple assessment instances;
-* supported question types in V1;
-* exact answer/explanation model;
-* exact topic/skill representation;
-* exact question-to-lesson mapping rules;
-* attempt limit, if any;
-* retake availability rules;
-* exact adaptive weighting algorithm;
-* whether timed assessments are enabled for all assessments or configured per assessment;
-* exact historical snapshot/version strategy;
-* whether a passing score is stored now as a reporting field even though it is not a completion gate.
+- Assessment status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`.
+- V1 supports at most one optional final diagnostic assessment per Course and at most one per Learning Path. This preserves the intentionally limited V1 scope; a later product decision may expand it.
+- Initial question types are single-choice and multiple-choice with deterministic auto-scoring. Free-text/manual grading, generalized question banks, proctoring, and AI grading are out of scope.
+- Questions may carry a topic/skill label and optional links to relevant lessons. Use a simple structured topic/skill identifier or label in V1; do not build a separate skill graph.
+- Answer choices and correct-answer data must never be exposed through student-facing assessment payloads before submission. Scoring and submission validation run server-side.
+- Preserve an immutable attempt snapshot of the questions, presented choices, selected answers, scoring-relevant data, and result so later edits do not rewrite history.
+- Allow retakes after a submitted attempt, with no artificial attempt limit by default. Keep every attempt. Select different questions when alternatives exist and use a deterministic, documented weighting rule that gives more emphasis to previously weak topics.
+- Timed mode is optional per assessment and disabled by default. If enabled, start/deadline/expiration are enforced server-side.
+- A passing-score field may be stored as optional informational metadata, but diagnostic assessment results are not a mandatory completion gate in V1.
 
-### Q&A
+## Q&A and discussion
 
-* final question statuses;
-* whether students may edit/delete questions;
-* whether instructors/moderators may edit/delete replies;
-* moderation rules.
+- Initial question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`; the precise display labels may differ by locale.
+- Authors may edit their own question while it remains open and has no accepted answer. Students may request deletion of their own question; use a moderation/soft-delete path when replies or audit history exist.
+- Instructors may reply within their assigned content scope. Moderators may hide, restore, or close contributions only where granted. Neither role gains unrestricted content-authoring permission by default.
+- Preserve discussion history and moderation actions. Authorization and parent-content scope are checked server-side for reads and mutations.
 
-### Settings
+## Settings and deferred domains
 
-* which current settings survive;
-* whether live sessions remain a WNM feature;
-* whether announcements become their own future domain.
+- Keep only settings required by approved V1 behavior: platform identity/branding, locale/RTL defaults, and essential learning/access configuration. Do not copy legacy settings merely because they exist in the prototype.
+- Live sessions are not required for V1 unless the Project Plan contains a separately approved, explicit requirement. Do not create a live-session schema in the initial foundation based solely on legacy UI.
+- Announcements are not a separate V1 domain unless separately approved. Do not implement support, global/private chat, payments, or AI as part of this schema work.
 
-### Database
+## Database conventions and migration ownership
 
-* final ID strategy;
-* timestamp conventions;
-* indexing strategy;
-* deletion strategy;
-* migration ownership between Drizzle and Better Auth tooling.
+- Use generated UUID primary keys for new WNM domain entities unless an external integration or Better Auth contract requires a different key.
+- Use timezone-aware timestamps stored in UTC for creation, update, publication, and lifecycle events as applicable. Update `updatedAt` consistently at the service/data-access boundary.
+- Add indexes for foreign keys and common access paths, including unique normalized slugs and relationship uniqueness. Add compound indexes based on verified query patterns rather than speculative optimization.
+- Use foreign keys and explicit deletion policies. Prefer archive/status transitions for records with history; do not cascade-delete learner attempts, audit records, or other historical records as a side effect of deleting parent content.
+- Better Auth owns its required authentication schema and migrations according to its verified adapter/tooling contract. Drizzle owns WNM domain tables and migrations. The implementation must verify that the two migration workflows coexist safely and must not let both tools claim ownership of the same tables.
+- Record sensitive role/permission changes, emergency confidential-policy access, and other security-sensitive administrative actions in an audit trail with actor, target, action, time, and reason/context where appropriate.
 
-These decisions must be settled before writing the production schema where they materially affect table structure.
+These defaults are sufficient to begin a first schema design. They do not authorize dependency installation, migrations, or implementation by themselves; those remain governed by the Project Plan and the approved implementation sequence.
 
 ---
 
