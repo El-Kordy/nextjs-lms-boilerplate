@@ -468,7 +468,7 @@ DRAFT
 PUBLISHED
 ```
 
-An `ARCHIVED` state is a possible addition and remains a decision for the final schema.
+The approved V1 course status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Draft and archived courses are not generally available to students. Prefer archiving over destructive deletion when learning history or other records reference the course.
 
 ---
 
@@ -600,9 +600,7 @@ A lesson may contain:
 * ordering;
 * timestamps.
 
-The exact lesson content-type rules remain a product decision.
-
-The preferred direction is for a lesson to be able to contain rich educational content and optionally a video rather than making "video" itself the domain entity.
+Approved V1 lesson payload rules: a lesson may be content-only, video-only, or contain both structured content and a supported video. A lesson must contain at least one valid learning payload before publication. Resources are supplemental and do not by themselves satisfy the required learning-payload rule. Video duration is stored in seconds and may not exceed 1,050 seconds.
 
 ---
 
@@ -838,13 +836,7 @@ They are derived/read-model values.
 
 A course can be considered completed when the applicable lessons are completed.
 
-A future course update must not accidentally erase historical completion merely because new lessons are added.
-
-The exact completion semantics after course structure changes must be finalized during implementation.
-
-The important domain principle is:
-
-> Course completion history must be treated deliberately when the course evolves.
+Course completion is derived from the learner's completion records for the course's required lessons; assessment completion is not a completion gate. When required lessons change, the application must recompute current progress consistently. It must not silently erase historical assessment attempts or misrepresent the fact that a learner previously completed the course. The precise treatment of previously completed courses after required lessons are added or changed remains an explicit schema/product decision tracked in Section 53A.
 
 Assessment completion does not automatically become a course-completion gate.
 
@@ -900,16 +892,7 @@ answered: boolean
 
 is too limited for the long-term domain.
 
-A richer question lifecycle may eventually distinguish states such as:
-
-```text
-OPEN
-ANSWERED
-RESOLVED
-HIDDEN
-```
-
-The V1 question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`. Keep display labels localizable. A question may be edited by its author only while it is open and has no accepted answer; deletion requests must preserve replies and audit history through moderation or soft deletion when needed.
+The approved V1 question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`. Do not add `RESOLVED` as a separate state unless the project owner explicitly approves a later change. Keep display labels localizable. A question may be edited by its author only while it is open and has no accepted answer; deletion requests must preserve replies and audit history through moderation or soft deletion when needed.
 
 ---
 
@@ -1085,7 +1068,7 @@ LearningPath
 └── updatedAt
 ```
 
-The final status values will be settled during schema design, but the path must support at least a non-public/draft state and a published state.
+The approved V1 Learning Path status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`, as specified in Section 26.7 and Section 53.
 
 ---
 
@@ -1665,9 +1648,7 @@ Authentication identity such as:
 
 belongs to the authentication system.
 
-The current onboarding requirement that every user provide a phone number is **not yet accepted as a permanent domain requirement**.
-
-This must be decided before final user schema design.
+Phone is optional and must not be required for registration or ordinary learning access. The approved profile defaults are display name plus optional avatar, phone, locale, and time-zone preference. Bio is not included in the approved initial profile fields; do not add it to the initial schema without explicit approval.
 
 ---
 
@@ -2025,25 +2006,15 @@ Exact indexes and constraints belong to the schema design phase.
 
 Destructive deletion requires special consideration because learning data may reference courses and lessons.
 
-Before implementing delete operations, we must determine the lifecycle policy for:
+The following deletion defaults are approved for schema design:
 
-* courses;
-* chapters;
-* lessons;
-* questions;
-* replies;
-* enrollments;
-* progress;
-* learning paths;
-* LearningPathCourse relationships;
-* assessments;
-* assessment questions;
-* assessment attempts;
-* attempt answers.
+* Prefer status/archive transitions for published courses, lessons, Learning Paths, assessments, and content referenced by learner history.
+* Do not cascade-delete assessment attempts, attempt answers, audit records, or learner history when deleting or archiving a parent record.
+* Removing a course from a Learning Path deletes only the relationship, not the course, its progress, or its enrollment history.
+* Hard deletion is reserved for unreferenced drafts or legally/operationally required erasure, with explicit foreign-key behavior and preservation obligations reviewed before implementation.
+* Question/reply removal must preserve discussion context and moderation history where replies or audit history exist.
 
-The current mock `deleteCourse()` / `deleteVideo()` behavior must not be copied blindly into production.
-
-Preserving learning history and referential integrity is more important than reproducing the mock service API.
+The current mock `deleteCourse()` / `deleteVideo()` behavior must not be copied blindly into production. The remaining entity-specific deletion details are tracked in Section 53A.
 
 For Learning Paths specifically:
 
@@ -2269,7 +2240,25 @@ The following defaults resolve the initial schema-affecting questions so databas
 - Better Auth owns its required authentication schema and migrations according to its verified adapter/tooling contract. Drizzle owns WNM domain tables and migrations. The implementation must verify that the two migration workflows coexist safely and must not let both tools claim ownership of the same tables.
 - Record sensitive role/permission changes, emergency confidential-policy access, and other security-sensitive administrative actions in an audit trail with actor, target, action, time, and reason/context where appropriate.
 
-These defaults are sufficient to begin a first schema design. They do not authorize dependency installation, migrations, or implementation by themselves; those remain governed by the Project Plan and the approved implementation sequence.
+These defaults settle the decisions explicitly listed above, but they are not sufficient to finalize the complete production schema until the open decisions in Section 53A are resolved or explicitly deferred with a safe default. They do not authorize dependency installation, migrations, or implementation by themselves; those remain governed by the Project Plan and approved implementation sequence.
+
+---
+
+## 53A. Remaining Schema-Affecting Decisions
+
+The following decisions are not settled by the current approved defaults. Do not silently invent a rule during schema implementation. Resolve each decision in this specification and the Project Plan, or record an explicit project-owner-approved deferral before finalizing the affected tables and constraints.
+
+1. **Re-enrollment history:** Decide whether re-enrollment creates a new Enrollment row or reactivates a prior `WITHDRAWN` row. In either case, preserve historical assessment attempts and relevant audit history, and define uniqueness accordingly.
+2. **Course completion after edits:** Decide whether adding/changing required lessons revokes current completion, preserves a historical completion event while recalculating current progress, or uses another explicit model. Keep current progress distinct from historical completion claims if needed.
+3. **Public preview configuration:** Decide whether preview eligibility is configured at Course level, Lesson level, or both, and define the rule for a lesson preview when the course has no active enrollment. Preview access must never grant access to non-preview content.
+4. **Content-module entity inventory:** Define the initial domain entities and relationships for Blog articles, Knowledge Base articles/sections or equivalent structure, Forms and submissions, page-builder pages/blocks, and approved policy capabilities. Keep their publication/access lifecycles distinct from Courses and Lessons.
+5. **Confidential-policy access and acknowledgments:** Define which actors may invoke emergency access, what reason/justification is required, which access events are audited, who can assign policies for acknowledgment, acknowledgment states/timestamps, and how history is retained when a policy is revised or withdrawn.
+6. **Forms:** Confirm the V1 form lifecycle and editing behavior, supported field types, validation rules, submission ownership/access, and whether form definitions must be versioned or snapshotted so later edits do not misrepresent prior submissions. Preserve the approved closed-form behavior and simple styling.
+7. **Permission resolution:** Define how role-based and user-specific grants combine, including explicit deny behavior if supported, revocation precedence, and how scoped grants interact with role membership. The implementation must deny by default and may not infer privileges from UI visibility.
+8. **Entity-specific deletion and retention:** Define the concrete deletion/retention rules for chapters, lessons, resources, enrollments, progress, Blog/KB content, forms/submissions, policy acknowledgments, and page-builder content. Do not introduce cascading deletion of historical records by convenience.
+9. **Audit-log implementation boundary:** Audit-sensitive actions are required to be auditable, but decide the minimum V1 audit record shape, retention policy, and which actions must be captured before choosing the final audit schema. This does not require implementing a broad governance suite.
+
+Do not begin final schema migration work while these decisions are unresolved. Schema exploration may identify options, but must not present an unapproved option as a settled requirement.
 
 ---
 
