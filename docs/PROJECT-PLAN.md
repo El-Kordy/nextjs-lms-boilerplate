@@ -247,6 +247,17 @@ Permissions will be centralized rather than scattering role checks throughout th
 
 ---
 
+
+## 6.1 Approved Identity and Authorization Defaults
+
+The approved role set is `SUPER_ADMIN`, `ADMIN`, `INSTRUCTOR`, `MODERATOR`, `SUPPORT`, and `STUDENT`. A user may hold multiple roles; the production model must not rely on one `role: string` field.
+
+Account status is independent of role assignment and uses `PENDING`, `ACTIVE`, `SUSPENDED`, and `DISABLED`. Phone, avatar, locale, and time-zone preference are optional profile fields; phone is not required for registration.
+
+Roles are separate from resource/action permission grants. Grants must be scoped and revocable, with server-side checks and audit records for sensitive changes. Users may not grant themselves roles or permissions. Only an existing `SUPER_ADMIN` may grant or revoke `SUPER_ADMIN`; no actor may grant privileges beyond their authority unless explicitly approved delegation rules permit it.
+
+Better Auth owns authentication identities, credentials, and sessions. WNM owns application roles, permissions, profile data, and domain relationships. Better Auth's required schema/migration behavior must be verified during implementation; Drizzle owns WNM domain tables and migrations, without competing ownership of the same tables.
+
 # 7. Learning Architecture
 
 The core learning structure will be:
@@ -1004,8 +1015,8 @@ Later:
 * Drizzle
 * Better Auth
 * Users
-* Roles
-* Permissions
+* Roles (multiple roles per user; approved role/status defaults in Section 6.1)
+* Scoped role/user permissions and server-side authorization
 * Security foundation
 * Environment configuration
 * RTL/Arabic foundation
@@ -1140,6 +1151,7 @@ If the answer is no, keep it deferred.
 * Shared content-scoped discussions approved for Lessons, Blog articles, and Knowledge Base articles
 * Shared Tiptap authoring direction and approved inventory decisions recorded; implementation and dependency verification remain pending
 * Future AI/RAG direction approved as an architectural capability, not a V1 dependency
+* Initial identity and authorization schema defaults reconciled with `docs/DOMAIN-FOUNDATION.md`; implementation remains planned
 
 ### In Progress
 
