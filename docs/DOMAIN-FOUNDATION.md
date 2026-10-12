@@ -2564,18 +2564,10 @@ Learning Paths and the defined diagnostic assessment experience are explicit exc
 
 # 58. Status of This Document
 
-This document is a **draft foundation specification**.
+This document is a **draft foundation specification**. It records the current approved product direction and planned domain model; it does not by itself authorize implementation, dependency installation, or database changes.
 
-It is not yet authorization to implement the database.
+The Project Plan records that independent architecture reviews were obtained from Claude, Kimi, and Qwen and compared to establish the current architecture direction. That review work must not be described as still outstanding. The domain specification remains subject to final review and approval by the WNM project owner, including resolution of the open decisions listed in Section 53.
 
-The next checkpoint is independent architecture review by:
+The next implementation checkpoint is to reconcile this specification with `docs/PROJECT-PLAN.md`, resolve any remaining contradictions or approval-dependent schema decisions, and then finalize the domain foundation before PostgreSQL/Drizzle schema design.
 
-* Claude
-* Kimi
-* Qwen
-
-Their feedback should be compared against this document.
-
-Final decisions remain with the WNM project owner.
-
-Once the specification is approved, the project may proceed to PostgreSQL/Drizzle schema design.
+Implementation status must continue to be recorded only when work has actually been completed and verified.
