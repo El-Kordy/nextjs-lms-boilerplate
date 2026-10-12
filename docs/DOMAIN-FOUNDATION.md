@@ -1,6 +1,6 @@
 # WNM LMS — Domain Foundation Specification
 
-**Status:** Draft — pending architecture review
+**Status:** Draft — pending final project-owner approval
 **Project:** WNM Learning Platform
 **Architecture:** Next.js modular monolith
 **Database:** PostgreSQL + Drizzle ORM — planned
@@ -87,6 +87,92 @@ Administrators should eventually be able to:
 
 ---
 
+# 2A. Additional Approved V1 Content Domains
+
+In addition to the core LMS, Learning Paths, limited diagnostic assessments, and Q&A described above, WNM V1 includes the following approved content and authoring domains. Their implementation is planned, not completed.
+
+## 2A.1 Blog
+
+The Blog is a distinct publishing domain for articles and posts. It must not be modeled as a Course or Lesson merely because it uses the shared rich-text authoring foundation.
+
+Blog content requires its own domain lifecycle, publication rules, routes, permissions, and content metadata. The initial editor scope is deliberately minimal: paragraphs, headings, bold/italic, lists, links, quotes, and images. Arbitrary user-supplied HTML is not allowed.
+
+Registered-user discussion on a Blog article may use the shared, content-scoped Q&A/discussion capability subject to authorization and moderation.
+
+## 2A.2 Knowledge Base
+
+The Knowledge Base is a distinct knowledge and documentation domain. It must retain its own article structure, navigation, access rules, publication lifecycle, and policy-related behavior rather than being treated as Blog content or lesson content.
+
+Approved V1 reading/navigation requirements include breadcrumbs, reading time, a back-to-top control, section navigation with icons and an active-heading indication, and load-more behavior where applicable.
+
+The initial Knowledge Base editor scope is deliberately minimal: paragraphs, headings, bold/italic, lists, links, quotes, and images. Arbitrary user-supplied HTML is not allowed.
+
+The following previously approved Knowledge Base policy capabilities remain in scope and must not be silently dropped:
+- emergency access to confidential policies, following the approved Option C decision;
+- reusable policy templates, following the approved Option C decision;
+- bulk policy-acknowledgment assignments, following the approved Option C decision.
+
+These requirements do not authorize building a broad enterprise governance or incident-management suite. AI features remain deferred to V2. Confidential-policy access must be explicitly authorized and appropriately recorded; exact operational details must be settled before implementation where not already documented.
+
+Registered-user discussion is scoped to an individual Knowledge Base article in V1. Series-wide discussion is not required for the initial release.
+
+## 2A.3 Forms
+
+Forms are an approved V1 domain and must have their own validation, submission, authorization, and lifecycle rules. Preserve the explicitly approved Option A closed-form behavior and the previously approved simple styling requirements. Do not invent additional form capabilities or treat approval of the domain as evidence that forms have been implemented.
+
+Any form that handles sensitive or restricted data must enforce access and validation on the server. The precise field catalog and any behavior not explicitly captured in the approved requirements must be resolved before implementation.
+
+## 2A.4 Visual Page Builder
+
+The approved V1 page builder supports both template-based starting points and a blank canvas for authorized advanced editors. It is a controlled page-composition capability, not permission to execute arbitrary HTML, scripts, or unsafe embeds.
+
+Available blocks and editing capabilities must be governed by explicit permissions. The UI must not be the security boundary: the server must validate page mutations, block types, references, and publication actions.
+
+## 2A.5 Shared Authoring Foundation
+
+A reusable Tiptap-based authoring foundation is intended to serve Lessons, Blog articles, and Knowledge Base articles while keeping their domain models and rules separate.
+
+The implementation sequence distinguishes:
+- lesson-editor integration needed by the core LMS; and
+- completion of the reusable, content-specific authoring foundation and its Blog/Knowledge Base integrations.
+
+The shared editor must use structured Tiptap JSON, an explicitly approved extension inventory, server-side validation, safe URL/embed handling, and a defined rendering/sanitization policy. Do not accept arbitrary HTML as canonical content.
+
+Native Tiptap extensions must be distinguished from custom WNM blocks. Before adding or installing any dependency, verify its license, maintenance/compatibility, and free/open-source suitability. No dependency installation is authorized by this specification alone.
+
+## 2A.6 Shared Content Q&A and Discussion
+
+The Q&A/discussion capability must be reusable across Lessons, Blog articles, and Knowledge Base articles, with each discussion explicitly scoped to its parent content resource. It remains separate from global/private Chat, which is deferred.
+
+Participation, replies, edits, deletion, moderation, and visibility must be permission-checked server-side. Students must not receive authoring or moderation powers merely because they can read published content. Moderators do not receive general content-authoring rights by default; additional permissions must be granted explicitly.
+
+## 2A.7 Collaboration and Permission Safeguards
+
+Approved collaboration/commenting capabilities and safeguards must be implemented with explicit resource/action permissions. Instructors receive the standard teaching/authoring capabilities intended for their assigned content; restricted blocks require explicit permission. Administrators grant role- or user-specific permissions as defined by the authorization model. Hiding controls in the client is not sufficient authorization.
+
+
+## 2A.9 Shared Authoring Permission Rules
+
+The shared authoring foundation is a reusable editor and content-block system, not a shared authorization shortcut. Lessons, Blog posts, Knowledge Base articles, Forms, and visual-builder pages may reuse editor infrastructure while retaining separate domain rules, publication workflows, visibility rules, and action permissions.
+
+* Students are read-only for published learning and editorial content. They receive no authoring UI or authoring API access by default.
+* Instructors may author only within explicitly assigned resources and only for content types and actions granted to them.
+* Moderators receive moderation capabilities only; authoring and publishing are not implied.
+* Admins grant role-level or user-specific capabilities within their own authority. A user-specific grant must be explicit, scoped, revocable, and auditable.
+* Restricted blocks require an explicit permission check for the acting user and target content. Client-side hiding is only a usability measure; the server must reject unauthorized block creation, updates, rendering-sensitive operations, and submissions.
+* A template, copied page, or duplicated content item must not silently carry permissions that expand access to the new resource.
+* The server must validate block type, block configuration, embedded resource references, and permitted state transitions. Arbitrary scripts and unsafe HTML remain outside the approved authoring model.
+
+## 2A.8 Scope and Status Rule
+
+All domains in this section are approved V1 requirements, but remain planned until implementation is actually completed and verified. AI remains deferred to V2. Support, global/private Chat, payments, self-hosted protected video, and other explicitly deferred capabilities remain deferred unless separately approved.
+
+---
+
+The V1 scope also includes the Blog, Knowledge Base, Forms, the controlled visual page builder, shared content-scoped discussions, and the shared authoring requirements defined in Section 2A.
+
+---
+
 # 3. Explicitly Deferred
 
 The following are not part of the current MVP implementation unless explicitly included by the V1 assessment/path decisions below.
@@ -132,50 +218,13 @@ The architecture may reserve boundaries for future features, but their implement
 
 ## 4.1 User
 
-The system has one primary identity entity:
+The system has one primary identity entity: `User`. A user represents one person who can interact with WNM. A person must not need duplicate accounts to perform more than one responsibility.
 
-`User`
-
-A user represents a person who can interact with WNM.
-
-The current legacy model:
-
-```ts
-role: string
-```
-
-must not survive into the production domain model.
-
-A user may have multiple roles.
-
-Examples:
-
-* STUDENT
-* INSTRUCTOR
-* MODERATOR
-* SUPPORT
-* ADMIN
-* SUPER_ADMIN
-
-A user may therefore be both:
-
-```text
-STUDENT + INSTRUCTOR
-```
-
-or:
-
-```text
-INSTRUCTOR + MODERATOR
-```
-
-without requiring duplicate user accounts.
-
----
+The legacy single-field model `role: string` must not survive into the production domain model.
 
 ## 4.2 Roles
 
-The planned role set is:
+The approved role set is:
 
 ```text
 SUPER_ADMIN
@@ -186,54 +235,30 @@ SUPPORT
 STUDENT
 ```
 
-Roles describe broad capabilities.
+Roles describe broad responsibility groups; they do not replace permission checks. A user may hold multiple roles, including STUDENT + INSTRUCTOR or INSTRUCTOR + MODERATOR.
 
-Roles do not replace permission checks.
+## 4.3 UserRole and Permission Grants
 
-Application authorization should ultimately be based on permissions/capabilities rather than scattered checks such as:
+Use a many-to-many UserRole relationship. Keep role assignment separate from resource/action permission grants. A permission grant may be role-based or user-specific and, where applicable, must identify its resource scope and allowed action.
 
-```ts
-user.role === "admin"
-```
+Deny by default when authorization cannot be established. Users may not grant themselves roles or permissions. Only an existing SUPER_ADMIN may grant or revoke SUPER_ADMIN; these changes must be audited. No actor may grant privileges beyond their own authority unless an explicitly approved delegation rule permits it.
 
----
-
-## 4.3 UserRole
-
-Production authorization requires a many-to-many relationship:
-
-```text
-User
-  |
-  +--- UserRole --- Role
-```
-
-This allows one user to have multiple roles.
-
-The exact physical implementation of the Role entity/table will be finalized during schema design.
-
-The important domain rule is:
-
-> A user must not be represented by one hard-coded role field.
-
----
+The exact physical Role table representation and permission catalog are implementation details; the domain requirements above are fixed.
 
 ## 4.4 Account Status
 
-The domain should support account lifecycle management independently of roles.
+Account status is independent of role assignment and uses these initial values:
 
-Examples include:
+- `PENDING`: registration or required account activation/approval is incomplete.
+- `ACTIVE`: the account may operate within its permissions.
+- `SUSPENDED`: access is temporarily blocked pending review or reinstatement.
+- `DISABLED`: access is administratively disabled.
 
-```text
-ACTIVE
-SUSPENDED
-```
+New accounts must not receive privileged roles merely because they registered. Suspended or disabled accounts must not be able to perform authenticated application actions. Status changes must not silently delete role assignments or learning history; sensitive administrative changes must be audited.
 
-The exact final enum/value set will be finalized during schema design.
+## 4.5 Profile Boundaries
 
-Suspending a user must not require changing or deleting their roles.
-
----
+Email and authentication credentials/session data belong to the authentication identity boundary and must follow the selected Better Auth integration. The WNM profile may contain a display name and optional avatar, phone number, locale, and time-zone preference. Phone is optional and must not be required for registration or ordinary learning access unless a separately approved requirement establishes that need. Avoid collecting profile fields without a product purpose.
 
 # 5. Authentication Boundary
 
@@ -314,6 +339,59 @@ This includes:
 * learning path management;
 * path/course relationship management.
 
+
+## 6.1 Explicit Role and Permission Requirements
+
+The role names below are broad responsibility groups, not automatic grants of every capability associated with a screen. A user may hold multiple roles. Effective access is the union of explicitly granted capabilities, constrained by resource ownership, assignment, publication state, and any more restrictive resource-level rules.
+
+### Student
+
+Students may:
+* browse and read published courses, Learning Paths, lessons, Blog posts, and Knowledge Base articles available to them;
+* enroll and access learning content according to the applicable enrollment and publication rules;
+* update their own permitted profile fields and their own learning progress;
+* create questions, replies, comments, or form submissions only where the relevant feature is enabled and the student is authorized.
+
+Students must not create, edit, publish, delete, or administer learning content; manage users or roles; access other users' private data; or change authoritative progress, assessment scores, or permissions by manipulating client requests.
+
+### Instructor
+
+Instructors may create and manage courses and learning content explicitly assigned to them, subject to the content's status and the permissions granted for that resource. The intended teaching scope includes assigned courses, chapters, lessons, lesson resources, course-related Q&A, and relevant learner-facing course updates.
+
+Instructor access does not automatically grant global administration, role management, access to unrelated courses, or permission to edit every restricted block. Creating or editing Blog posts, Knowledge Base articles, Forms, page-builder pages, policy content, or restricted editor blocks requires the corresponding capability and resource scope to be granted explicitly.
+
+### Moderator
+
+Moderators may perform the moderation actions explicitly granted for the relevant discussion or content scope, such as reviewing, hiding, restoring, or escalating user-generated contributions where those actions are supported. Moderator status does not grant authoring, publishing, course ownership, role management, or unrestricted content editing by default.
+
+### Support
+
+Support users receive only the support and account-assistance capabilities explicitly assigned to them. Support status does not grant unrestricted access to private learner content, assessment answers, confidential policy content, or administrative settings. Any exceptional access must be purpose-limited and auditable.
+
+### Admin and Super Admin
+
+Admins may manage users, roles, permissions, publication, and platform content only within the administrative capabilities assigned to them. Super Admin is the highest application-level administrative role, but sensitive operations must still be authenticated, explicitly authorized, validated, and audited where appropriate. Role assignment must not allow an administrator to grant privileges beyond their own authority unless that delegation is explicitly approved by the project owner.
+
+### Resource and action permissions
+
+Authorization decisions must consider both the action and the target resource. Examples include:
+* `course.read`, `course.create`, `course.update`, `course.publish`, and `course.delete`;
+* `lesson.create`, `lesson.update`, `lesson.publish`, and `lesson.delete`;
+* `content.block.use` or an equivalent explicit permission for restricted authoring blocks;
+* `discussion.reply`, `discussion.moderate`, and `discussion.manage`;
+* `assessment.manage`, `assessment.attempt`, and `assessment.review`;
+* `user.manage`, `role.assign`, `permission.grant`, and `settings.manage`.
+
+These names are illustrative capability identifiers, not a mandate to adopt this exact string enum. The final permission catalogue should be explicit and testable. Checks must be enforced in server-side services/actions and data access paths; hiding a button or editor block in the client is not an authorization boundary.
+
+### Permission changes and restricted operations
+
+* Deny by default when a required permission or resource relationship cannot be established.
+* Verify resource scope on every read and mutation, including nested resources and submitted identifiers.
+* Validate role and permission changes server-side, prevent unauthorized privilege escalation, and record sensitive changes in the audit trail.
+* Treat imported, copied, duplicated, or template-derived content as subject to the destination resource's permissions; permissions must not be inherited accidentally from the source.
+* Test both allowed and denied cases for each role, action, and resource scope.
+
 ---
 
 # 7. Course Domain
@@ -390,7 +468,7 @@ DRAFT
 PUBLISHED
 ```
 
-An `ARCHIVED` state is a possible addition and remains a decision for the final schema.
+The approved V1 course status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Draft and archived courses are not generally available to students. Prefer archiving over destructive deletion when learning history or other records reference the course.
 
 ---
 
@@ -415,9 +493,21 @@ This permits:
 * future reassignment;
 * explicit ownership checks.
 
-The exact V1 rule for whether a course must have one or may have multiple instructors is still subject to final product approval.
+V1 supports zero, one, or multiple assigned instructors per course. Instructor assignment is represented through `CourseInstructor`; assignment grants resource scope, not global administration. Server-side authorization must verify assignment and any required action-specific permission.
 
-The relationship should nevertheless be designed so that it does not require a future destructive migration to support multiple instructors.
+
+## 9.1 Instructor Scope and Course Authorization
+
+The CourseInstructor relationship establishes an instructor's resource scope; the presence of an instructor role alone does not authorize access to every course.
+
+For course and lesson operations, the server must verify:
+* that the user is authenticated and has the required action permission;
+* that the target course is assigned to the instructor, or that a separate explicit administrative permission authorizes the operation;
+* that the chapter, lesson, resource, assessment, or Q&A item belongs to the authorized course scope;
+* that the requested state transition (for example, draft to published) is permitted;
+* that any restricted block or sensitive action has its own required capability.
+
+An instructor must not gain access to another instructor's unpublished content by changing a URL, record ID, parent ID, or client-supplied ownership field. Ownership/assignment checks must be performed server-side for both reads and writes. Administrative access and instructor access should remain separate capabilities so that granting teaching duties does not accidentally grant platform-wide administration.
 
 ---
 
@@ -510,9 +600,7 @@ A lesson may contain:
 * ordering;
 * timestamps.
 
-The exact lesson content-type rules remain a product decision.
-
-The preferred direction is for a lesson to be able to contain rich educational content and optionally a video rather than making "video" itself the domain entity.
+Approved V1 lesson payload rules: a lesson may be content-only, video-only, or contain both structured content and a supported video. A lesson must contain at least one valid learning payload before publication. Resources are supplemental and do not by themselves satisfy the required learning-payload rule. Video duration is stored in seconds and may not exceed 1,050 seconds.
 
 ---
 
@@ -567,6 +655,8 @@ Course
 ---
 
 ## 15.1 Current Provider
+
+V1 supports YouTube and supported external video URLs. Video remains separate from the lesson's structured content. Validate provider and URL behavior server-side.
 
 The current provider is:
 
@@ -679,7 +769,7 @@ This provides the foundation for:
 * future paid-course access;
 * future entitlement rules.
 
-The exact enrollment statuses and whether every free published course requires explicit enrollment are still product decisions to finalize before schema implementation.
+V1 enrollment statuses are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`. Full course access requires an active enrollment unless the course explicitly enables a public preview. Public preview grants access only to the configured preview content; it does not silently enroll the learner or grant access to the full course. Learning Paths do not automatically enroll learners in their courses.
 
 ---
 
@@ -746,13 +836,7 @@ They are derived/read-model values.
 
 A course can be considered completed when the applicable lessons are completed.
 
-A future course update must not accidentally erase historical completion merely because new lessons are added.
-
-The exact completion semantics after course structure changes must be finalized during implementation.
-
-The important domain principle is:
-
-> Course completion history must be treated deliberately when the course evolves.
+Course completion is derived from the learner's completion records for the course's required lessons; assessment completion is not a completion gate. When required lessons change, the application must recompute current progress consistently. It must not silently erase historical assessment attempts or misrepresent the fact that a learner previously completed the course. The precise treatment of previously completed courses after required lessons are added or changed remains an explicit schema/product decision tracked in Section 53A.
 
 Assessment completion does not automatically become a course-completion gate.
 
@@ -808,16 +892,7 @@ answered: boolean
 
 is too limited for the long-term domain.
 
-A richer question lifecycle may eventually distinguish states such as:
-
-```text
-OPEN
-ANSWERED
-RESOLVED
-HIDDEN
-```
-
-The final state set will be approved before schema implementation.
+The approved V1 question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`. Do not add `RESOLVED` as a separate state unless the project owner explicitly approves a later change. Keep display labels localizable. A question may be edited by its author only while it is open and has no accepted answer; deletion requests must preserve replies and audit history through moderation or soft deletion when needed.
 
 ---
 
@@ -993,7 +1068,7 @@ LearningPath
 └── updatedAt
 ```
 
-The final status values will be settled during schema design, but the path must support at least a non-public/draft state and a published state.
+The approved V1 Learning Path status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`, as specified in Section 26.7 and Section 53.
 
 ---
 
@@ -1139,17 +1214,7 @@ Paths
 
 ## 26.7 Learning Path Publication and Course Status
 
-The final behavior when a course inside a published path later becomes `DRAFT` or `ARCHIVED` is still an explicit schema/product decision.
-
-The system must define this before production implementation.
-
-The preferred principle is:
-
-> A published path must not silently promise access to content the student cannot access.
-
-Possible implementation policies include hiding unavailable courses from the public path, showing them as unavailable, or preventing publication/archiving transitions under specific conditions. The final rule must be selected before implementation.
-
-V1 should allow paths to be built from existing published courses.
+A Learning Path has `DRAFT`, `PUBLISHED`, or `ARCHIVED` status. Publishing a path requires its included courses to be published. If an included course later becomes `DRAFT` or `ARCHIVED`, retain its ordered path relationship, show the course as unavailable to students, and flag the path for editorial review rather than silently promising access. V1 paths are built from existing published courses.
 
 ---
 
@@ -1212,6 +1277,14 @@ The initial V1 scope should support an optional final assessment rather than a g
 
 ---
 
+
+### Assessment Authorization
+
+Assessment authoring and administration require explicit permissions scoped to the owning Course or Learning Path. Instructors may manage assessments only when assigned to the owning resource and granted assessment-management permission. Students may create attempts only for assessments available to them under the applicable publication and access rules.
+
+Correct answers, scoring rules, answer keys, and other assessment-authoring data must not be exposed to students before or during an attempt unless a specific approved review behavior requires it. Attempt creation, submission, timing enforcement, scoring, retakes, and result access must be validated server-side. A client-supplied score, completion state, attempt owner, or assessment owner is never authoritative.
+
+
 ## 27.2 Assessment
 
 Conceptually:
@@ -1228,7 +1301,7 @@ Assessment
 └── timestamps
 ```
 
-The exact physical ownership model will be finalized during schema design. The important domain rule is that an assessment belongs to exactly one supported owner type: Course or Learning Path.
+An assessment belongs to exactly one supported owner type: Course or Learning Path. V1 permits at most one optional final diagnostic assessment per Course and at most one per Learning Path. Enforce this invariant in the domain/service layer and database design where practical.
 
 The assessment should be independently publishable/configurable according to the permissions of the owning Course/Path.
 
@@ -1575,9 +1648,7 @@ Authentication identity such as:
 
 belongs to the authentication system.
 
-The current onboarding requirement that every user provide a phone number is **not yet accepted as a permanent domain requirement**.
-
-This must be decided before final user schema design.
+Phone is optional and must not be required for registration or ordinary learning access. The approved profile defaults are display name plus optional avatar, phone, locale, and time-zone preference. Bio is not included in the approved initial profile fields; do not add it to the initial schema without explicit approval.
 
 ---
 
@@ -1935,25 +2006,15 @@ Exact indexes and constraints belong to the schema design phase.
 
 Destructive deletion requires special consideration because learning data may reference courses and lessons.
 
-Before implementing delete operations, we must determine the lifecycle policy for:
+The following deletion defaults are approved for schema design:
 
-* courses;
-* chapters;
-* lessons;
-* questions;
-* replies;
-* enrollments;
-* progress;
-* learning paths;
-* LearningPathCourse relationships;
-* assessments;
-* assessment questions;
-* assessment attempts;
-* attempt answers.
+* Prefer status/archive transitions for published courses, lessons, Learning Paths, assessments, and content referenced by learner history.
+* Do not cascade-delete assessment attempts, attempt answers, audit records, or learner history when deleting or archiving a parent record.
+* Removing a course from a Learning Path deletes only the relationship, not the course, its progress, or its enrollment history.
+* Hard deletion is reserved for unreferenced drafts or legally/operationally required erasure, with explicit foreign-key behavior and preservation obligations reviewed before implementation.
+* Question/reply removal must preserve discussion context and moderation history where replies or audit history exist.
 
-The current mock `deleteCourse()` / `deleteVideo()` behavior must not be copied blindly into production.
-
-Preserving learning history and referential integrity is more important than reproducing the mock service API.
+The current mock `deleteCourse()` / `deleteVideo()` behavior must not be copied blindly into production. The remaining entity-specific deletion details are tracked in Section 53A.
 
 For Learning Paths specifically:
 
@@ -2109,80 +2170,107 @@ Everything else should justify its existence before entering the first productio
 
 ---
 
-# 53. Decisions Still Requiring Approval
+# 53. Schema Decisions and Approved Defaults
 
-Before the final Drizzle schema, the following decisions must be explicitly settled:
+The following defaults resolve the initial schema-affecting questions so database design can proceed without repeatedly reopening settled choices. They are product/domain defaults, not a claim that the database or features have been implemented. A future change should be recorded explicitly in the Project Plan and this specification before it changes the schema.
 
-### Identity
+## Identity and authorization
 
-* exact account status values;
-* whether phone is optional;
-* profile field boundaries;
-* final role storage model.
+- Account status values are `PENDING`, `ACTIVE`, `SUSPENDED`, and `DISABLED`, as defined in Section 4.
+- Phone, avatar, locale, and time-zone preference are optional profile fields. Do not require phone for registration.
+- A user may hold multiple roles through a many-to-many UserRole relationship.
+- Role-based and user-specific permission grants are separate from role membership and must be scoped, revocable, and auditable where appropriate.
+- Only an existing SUPER_ADMIN may grant or revoke SUPER_ADMIN. No self-granting or privilege escalation is permitted.
+- Better Auth owns authentication identities, credentials, and sessions; WNM owns application roles, permissions, profile data, and domain relationships.
 
-### Course
+## Courses, instructors, categories, and language
 
-* final course status values;
-* whether `ARCHIVED` is required;
-* one vs multiple instructors in V1;
-* slug strategy;
-* category management;
-* course language/localization strategy.
+- Course status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Draft and archived courses are not generally available to students. Archiving is preferred to destructive deletion for courses with learning history.
+- A course may have multiple assigned instructors in V1. Store assignments as a relationship, not as a single instructor field. Each instructor may manage only courses and resources within their granted scope.
+- Course slugs are unique, normalized URL identifiers. Slug changes must not silently change ownership or authorization; redirects/aliases may be added if needed, but are not required for the first schema.
+- Categories are reusable entities, and course/category membership is many-to-many. Category management is restricted to authorized staff.
+- Store the primary content language as a locale/language code. Arabic is the initial default. Do not build a full translation/versioning subsystem for V1; mixed Arabic/English content and native RTL support are required.
 
-### Learning
+## Enrollment, lessons, progress, and deletion
 
-* whether enrollment is mandatory for free courses;
-* enrollment status values;
-* lesson content rules;
-* whether a lesson may be content-only, video-only, or both;
-* course completion behavior after structural updates;
-* deletion/archive behavior.
+- Enrollment is required for full access to a course unless a specific course or lesson is explicitly configured as a public preview. Learning Paths do not automatically enroll students.
+- Enrollment status values are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`. Enrollment history is retained; a withdrawn student may be re-enrolled without deleting prior attempts or audit history.
+- A lesson may be content-only, video-only, or contain both structured content and a supported video. It must have at least one valid learning payload before publication. Video duration must not exceed 17 minutes and 30 seconds (1050 seconds).
+- Lesson completion is recorded per user and lesson. Course completion is derived from the course's required lessons and the learner's completion records, rather than stored video counters. If required course structure changes, recompute derived completion/progress consistently; preserve historical assessment attempts.
+- Prefer archive/status transitions over hard deletion for published courses, lessons, paths, assessments, or content referenced by learner history. Hard deletion is reserved for unreferenced drafts or legally/operationally required erasure and must respect foreign-key and audit requirements.
 
-### Learning Paths
+## Learning Paths
 
-* final path status values;
-* final slug rules;
-* exact behavior when a published course later becomes draft/archived;
-* whether a path may contain only published courses at publication time;
-* exact path deletion/archive behavior.
+- Path status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. Path slugs are unique normalized URL identifiers.
+- A path may contain only published courses when it is published. Adding a course to a path does not enroll a student.
+- If a course in a published path later becomes draft or archived, keep the path record intact, make the unavailable course inaccessible to students, and flag the path for authorized editorial review. Do not silently publish draft content or automatically change student enrollment.
+- Archiving a path removes it from ordinary student discovery but preserves its relationships and progress context.
 
-### Assessments
+## Diagnostic assessments
 
-* exact assessment status values;
-* whether V1 permits one assessment per Course/Path or multiple assessment instances;
-* supported question types in V1;
-* exact answer/explanation model;
-* exact topic/skill representation;
-* exact question-to-lesson mapping rules;
-* attempt limit, if any;
-* retake availability rules;
-* exact adaptive weighting algorithm;
-* whether timed assessments are enabled for all assessments or configured per assessment;
-* exact historical snapshot/version strategy;
-* whether a passing score is stored now as a reporting field even though it is not a completion gate.
+- Assessment status values are `DRAFT`, `PUBLISHED`, and `ARCHIVED`.
+- V1 supports at most one optional final diagnostic assessment per Course and at most one per Learning Path. This preserves the intentionally limited V1 scope; a later product decision may expand it.
+- Initial question types are single-choice and multiple-choice with deterministic auto-scoring. Free-text/manual grading, generalized question banks, proctoring, and AI grading are out of scope.
+- Questions may carry a topic/skill label and optional links to relevant lessons. Use a simple structured topic/skill identifier or label in V1; do not build a separate skill graph.
+- Answer choices and correct-answer data must never be exposed through student-facing assessment payloads before submission. Scoring and submission validation run server-side.
+- Preserve an immutable attempt snapshot of the questions, presented choices, selected answers, scoring-relevant data, and result so later edits do not rewrite history.
+- Allow retakes after a submitted attempt, with no artificial attempt limit by default. Keep every attempt. Select different questions when alternatives exist and use a deterministic, documented weighting rule that gives more emphasis to previously weak topics.
+- Timed mode is optional per assessment and disabled by default. If enabled, start/deadline/expiration are enforced server-side.
+- A passing-score field may be stored as optional informational metadata, but diagnostic assessment results are not a mandatory completion gate in V1.
 
-### Q&A
+## Q&A and discussion
 
-* final question statuses;
-* whether students may edit/delete questions;
-* whether instructors/moderators may edit/delete replies;
-* moderation rules.
+- Initial question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`; the precise display labels may differ by locale.
+- Authors may edit their own question while it remains open and has no accepted answer. Students may request deletion of their own question; use a moderation/soft-delete path when replies or audit history exist.
+- Instructors may reply within their assigned content scope. Moderators may hide, restore, or close contributions only where granted. Neither role gains unrestricted content-authoring permission by default.
+- Preserve discussion history and moderation actions. Authorization and parent-content scope are checked server-side for reads and mutations.
 
-### Settings
+## Settings and deferred domains
 
-* which current settings survive;
-* whether live sessions remain a WNM feature;
-* whether announcements become their own future domain.
+- Keep only settings required by approved V1 behavior: platform identity/branding, locale/RTL defaults, and essential learning/access configuration. Do not copy legacy settings merely because they exist in the prototype.
+- Live sessions are not required for V1 unless the Project Plan contains a separately approved, explicit requirement. Do not create a live-session schema in the initial foundation based solely on legacy UI.
+- Announcements are not a separate V1 domain unless separately approved. Do not implement support, global/private chat, payments, or AI as part of this schema work.
 
-### Database
+## Database conventions and migration ownership
 
-* final ID strategy;
-* timestamp conventions;
-* indexing strategy;
-* deletion strategy;
-* migration ownership between Drizzle and Better Auth tooling.
+- Use generated UUID primary keys for new WNM domain entities unless an external integration or Better Auth contract requires a different key.
+- Use timezone-aware timestamps stored in UTC for creation, update, publication, and lifecycle events as applicable. Update `updatedAt` consistently at the service/data-access boundary.
+- Add indexes for foreign keys and common access paths, including unique normalized slugs and relationship uniqueness. Add compound indexes based on verified query patterns rather than speculative optimization.
+- Use foreign keys and explicit deletion policies. Prefer archive/status transitions for records with history; do not cascade-delete learner attempts, audit records, or other historical records as a side effect of deleting parent content.
+- Better Auth owns its required authentication schema and migrations according to its verified adapter/tooling contract. Drizzle owns WNM domain tables and migrations. The implementation must verify that the two migration workflows coexist safely and must not let both tools claim ownership of the same tables.
+- Record sensitive role/permission changes, emergency confidential-policy access, and other security-sensitive administrative actions in an audit trail with actor, target, action, time, and reason/context where appropriate.
 
-These decisions must be settled before writing the production schema where they materially affect table structure.
+These defaults settle the decisions explicitly listed above, but they are not sufficient to finalize the complete production schema until the open decisions in Section 53A are resolved or explicitly deferred with a safe default. They do not authorize dependency installation, migrations, or implementation by themselves; those remain governed by the Project Plan and approved implementation sequence.
+
+---
+
+## 53A. Schema-Affecting Decisions and V1 Defaults
+
+This section records the V1 defaults for schema-affecting decisions. These are domain requirements for planning and review, not permission to skip implementation approval, security review, tests, or migration QA. Jurisdiction-specific retention periods remain open pending privacy review; do not invent a fixed duration.
+
+1. **Re-enrollment history — V1 default:** Each new enrollment episode creates a new Enrollment row; do not reactivate or overwrite a prior `WITHDRAWN` or `COMPLETED` episode. Keep prior episode timestamps/status and related attempts/audit history. Enforce at most one current `ACTIVE` enrollment per user/course, while allowing multiple historical episodes. Re-enrollment does not restore prior progress automatically; lesson completion remains tied to the learner and lesson unless a separately approved rule says otherwise.
+2. **Course completion after edits — V1 default:** Current completion is derived from the currently required lessons. If an authorized edit adds a required lesson the learner has not completed, current completion becomes incomplete and current progress is recalculated. Preserve the fact and timestamp of an earlier completion as historical evidence; do not erase the prior completion event or imply that the learner never completed the earlier course version. A separate certificate/credential system is not implied by this rule.
+3. **Public preview configuration — V1 default:** Configure public preview at the Lesson level using an explicit preview flag/allowlist on a published course. A course-level setting may enable or disable preview availability globally, but it does not make every lesson public by itself. A lesson is publicly accessible only when the course is published, course preview is enabled, and that lesson is explicitly marked for preview. All other lessons and resources remain protected by normal authorization; preview access never creates an enrollment.
+4. **Content-module entity inventory — V1 default:** Keep these as separate domain areas with their own authorization and publication lifecycle; do not model them as Courses or Lessons.
+   - **Blog:** `BlogPost` with author, publication status/timestamps, slug, and article content; reuse shared authoring and article-scoped discussion without sharing course enrollment rules.
+   - **Knowledge Base:** `KnowledgeBaseArticle` with author, publication/access status, slug, content, and optional category/section relationship for navigation. Confidential policy content must use explicit access rules rather than relying on an article being hard to find.
+   - **Forms:** `Form` and `FormSubmission`; submission records must retain the form definition/version used at submission. Exact versioning, fields, and editing behavior remain covered by decision 6.
+   - **Page builder:** `Page` plus ordered page-block records or an equivalent structured representation. Blocks must use the approved block inventory and server-side authorization/validation; no arbitrary scripts or unsafe HTML. Templates are reusable starting points, not published pages themselves.
+   - **Approved policy capabilities:** Model policy documents, acknowledgment assignments/records, and access-event records as explicit policy-domain concepts linked to KB content where appropriate. Final emergency-access, revision-history, and acknowledgment lifecycle rules remain covered by decision 5.
+   - Shared authoring/editor infrastructure may be reused, but content ownership, permissions, lifecycle, discussion scope, and retention remain domain-specific. This inventory establishes domain boundaries, not final table columns or a license to begin migrations.
+5. **Confidential-policy access and acknowledgments — V1 defaults:**
+   - **Normal access:** Confidential policy content is available only to users covered by an explicit resource permission or an explicitly configured audience/assignment. Being an `ADMIN`, `INSTRUCTOR`, `MODERATOR`, or `SUPPORT` does not by itself grant access to confidential content. Hiding a link or using an unguessable URL is not authorization.
+   - **Emergency access:** `SUPER_ADMIN` and `ADMIN` may invoke a dedicated break-glass path for a specific policy when necessary. Each attempt requires a non-empty justification and is checked server-side. Record the actor, policy, timestamp, justification, requested action/scope, and allowed/denied outcome. Record denied attempts as well as successful access. Do not copy policy contents or secrets into audit records. Emergency access does not silently grant continuing access or change the user's standing permissions.
+   - **Assignment authority:** `SUPER_ADMIN` and `ADMIN`, plus any user explicitly granted a policy-management permission, may create and manage acknowledgment assignments. An assignment targets named users or a defined audience. Resolve and snapshot the target users when the assignment is issued so later role-membership changes do not silently rewrite who was assigned.
+   - **Acknowledgment record:** Track assignment status (`PENDING`, `ACKNOWLEDGED`, or `EXEMPTED`), the assigned user, policy and exact revision, assignment timestamp, and relevant acknowledgment/exemption timestamp. An exemption requires an authorized actor and recorded reason; it is not equivalent to acknowledgment. A due date is optional and does not change the meaning of the status.
+   - **Policy revisions and withdrawal:** Acknowledgment applies to a specific policy revision. When a substantive revision is marked as requiring re-acknowledgment, create a new assignment for that revision; preserve earlier acknowledgments as history rather than overwriting them. Withdrawing or archiving a policy must not erase its access events, assignments, acknowledgments, or exemptions.
+   - **Scope boundary:** These are minimum V1 access-control, acknowledgment, and audit requirements for the approved policy features, not authorization to build a broad enterprise governance, incident-management, or compliance suite.
+6. **Forms — V1 default:** Keep the approved closed-form behavior and simple styling. Support a deliberately small initial field set: short text, long text, email, number, single-choice, multiple-choice, checkbox/consent, and date. Every field has a stable identifier, label, required/optional setting, and field-type-specific constraints; choice fields have explicit options. Validate field definitions and every submission on the server, including required fields, types, lengths/ranges, allowed choices, and unknown/forged field identifiers. A published form revision is immutable: editing a published form creates a new revision, and each submission references the exact revision used. Do not let respondents edit a submitted response in V1. Only the form owner and users with explicit submission-view permission may read submissions; administrative role membership alone does not grant access to potentially sensitive answers. Avoid collecting unnecessary sensitive data. Exact retention periods remain subject to the retention rule below.
+7. **Permission resolution — V1 default:** Deny by default. A request is allowed only when an active, applicable grant covers the requested action and resource scope. Role-based grants and user-specific grants may each grant access; effective access is their union, constrained by resource scope and any applicable explicit denial. An explicit user/resource/action denial overrides an allow for that same scope. More-specific resource rules do not grant access to unrelated resources. Revoking or expiring a grant removes the access it supplied; do not cache authorization in a way that permits stale privileges after revocation. A role name alone is not a permission, except for narrowly defined platform operations explicitly specified in this document (including the documented SUPER_ADMIN governance boundary and confidential-policy break-glass path). Grant/revoke operations require server-side authorization, audit records, and protection against self-grant or privilege escalation. Only an existing SUPER_ADMIN may grant or revoke SUPER_ADMIN. Authorization checks must be enforced on every relevant server-side read and write, not only in navigation or UI.
+8. **Entity-specific deletion and retention — V1 default:** Prefer archive/unpublish/soft-delete for authored content when references or history must remain meaningful. Deleting or archiving a course, chapter, lesson, path, Blog/KB article, form, or page must not cascade-delete enrollment episodes, progress/completion evidence, assessment attempts, form submissions, policy assignments/acknowledgments, discussion/moderation history, or audit events. Preserve the referenced revision or a sufficient immutable snapshot where required to interpret historical submissions, attempts, and acknowledgments. A destructive operation must check authorization and dependencies server-side and report its effect without silently destroying history. Hard deletion may be used only for data with no required historical references and where an approved retention/privacy rule permits it. Account erasure/anonymization and statutory retention periods require a separate jurisdiction-aware privacy decision; do not invent a fixed retention duration. Before production launch, define and document configurable retention/deletion procedures, access restrictions, and any legally required exceptions.
+9. **Minimum audit record and event coverage — V1 default:** Record at minimum a stable event ID, UTC timestamp, actor (or system actor), action, target entity type and identifier where applicable, outcome (allowed/denied/success/failure as relevant), resource scope, and correlation/request ID when available. Include a non-sensitive reason/justification for privileged actions and emergency access. Capture authentication/security-sensitive events, role and permission grants/revocations, denied and successful confidential-policy break-glass attempts, policy access and acknowledgment/exemption actions, publication/status changes, moderation actions, and destructive or history-affecting operations. Audit records must be append-only to ordinary application actors, accessible only to explicitly authorized readers, and protected from modification/deletion through ordinary domain workflows. Never store passwords, session tokens, credentials, secret values, or full confidential policy contents in audit payloads. Do not log form answers by default. Retention duration and any legally required exceptions remain configurable and must be settled through the privacy/retention review before production launch; this requirement does not authorize a broad governance suite.
+
+These are V1 domain defaults for schema planning, not permission to begin implementation without the approved implementation checkpoint. They close the four open design questions at the domain-requirement level; jurisdiction-specific retention periods remain explicitly unassigned pending privacy review. No dependency installation, migration, or production implementation is authorized by this documentation change.
 
 ---
 
@@ -2291,15 +2379,18 @@ Centralize:
 
 ### Step 7 — Build the real LMS foundation
 
-Implement:
+Implement the core lesson integration needed for the LMS:
 
 * courses;
 * chapters;
 * lessons;
-* Tiptap content;
-* YouTube;
+* lesson Tiptap content using the approved lesson inventory;
+* YouTube and supported external video URLs;
+* the approved 17-minute-30-second maximum video duration;
 * enrollment;
 * progress.
+
+This step does not, by itself, mean the reusable authoring foundation for Blog and Knowledge Base is complete.
 
 ### Step 8 — Build Learning Paths
 
@@ -2337,7 +2428,21 @@ Implement:
 * moderation;
 * authorization.
 
-### Step 11 — Production hardening
+### Step 11 — Complete shared authoring and approved content modules
+
+Complete the reusable authoring foundation and the approved V1 content domains:
+
+* shared Tiptap foundation for Lessons, Blog, and Knowledge Base, with distinct domain policies;
+* Blog publishing and article-scoped discussion;
+* Knowledge Base articles, reading/navigation features, approved policy capabilities, and article-scoped discussion;
+* Forms with the approved closed-form behavior and server-side validation;
+* the controlled visual page builder, templates, blank canvas, and permission-checked blocks;
+* approved collaboration/commenting safeguards;
+* dependency license and compatibility verification before any installation.
+
+AI remains deferred to V2. Do not implement or install dependencies solely because they appear in the editor inventory.
+
+### Step 12 — Production hardening
 
 Then address:
 
@@ -2384,18 +2489,10 @@ Learning Paths and the defined diagnostic assessment experience are explicit exc
 
 # 58. Status of This Document
 
-This document is a **draft foundation specification**.
+This document is a **draft foundation specification**. It records the current approved product direction and planned domain model; it does not by itself authorize implementation, dependency installation, or database changes.
 
-It is not yet authorization to implement the database.
+The Project Plan records that independent architecture reviews were obtained from Claude, Kimi, and Qwen and compared to establish the current architecture direction. That review work must not be described as still outstanding. The domain specification remains subject to final review and approval by the WNM project owner, including resolution of the open decisions listed in Section 53.
 
-The next checkpoint is independent architecture review by:
+The next implementation checkpoint is to reconcile this specification with `docs/PROJECT-PLAN.md`, resolve any remaining contradictions or approval-dependent schema decisions, and then finalize the domain foundation before PostgreSQL/Drizzle schema design.
 
-* Claude
-* Kimi
-* Qwen
-
-Their feedback should be compared against this document.
-
-Final decisions remain with the WNM project owner.
-
-Once the specification is approved, the project may proceed to PostgreSQL/Drizzle schema design.
+Implementation status must continue to be recorded only when work has actually been completed and verified.

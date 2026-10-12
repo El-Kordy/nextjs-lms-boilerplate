@@ -247,6 +247,34 @@ Permissions will be centralized rather than scattering role checks throughout th
 
 ---
 
+
+## 6.1 Approved Identity and Authorization Defaults
+
+The approved role set is `SUPER_ADMIN`, `ADMIN`, `INSTRUCTOR`, `MODERATOR`, `SUPPORT`, and `STUDENT`. A user may hold multiple roles; the production model must not rely on one `role: string` field.
+
+Account status is independent of role assignment and uses `PENDING`, `ACTIVE`, `SUSPENDED`, and `DISABLED`. Phone, avatar, locale, and time-zone preference are optional profile fields; phone is not required for registration.
+
+Roles are separate from resource/action permission grants. Grants must be scoped and revocable, with server-side checks and audit records for sensitive changes. Users may not grant themselves roles or permissions. Only an existing `SUPER_ADMIN` may grant or revoke `SUPER_ADMIN`; no actor may grant privileges beyond their authority unless explicitly approved delegation rules permit it.
+
+Better Auth owns authentication identities, credentials, and sessions. WNM owns application roles, permissions, profile data, and domain relationships. Better Auth's required schema/migration behavior must be verified during implementation; Drizzle owns WNM domain tables and migrations, without competing ownership of the same tables.
+
+
+## 6.2 Approved Domain Defaults
+
+These defaults align with `docs/DOMAIN-FOUNDATION.md`. They define intended behavior; they do not claim implementation is complete. Remaining schema-affecting decisions are tracked in Section 53A of that specification and must be resolved or explicitly deferred before final schema/migration work.
+
+- **Course instructors:** A course may have zero, one, or multiple assigned instructors through a relationship. Instructor role membership alone does not grant access to every course; enforce assigned-resource scope and action permissions server-side.
+- **Enrollment and previews:** Full course access requires active enrollment unless a course explicitly configures public preview. Preview access is limited to configured content and does not create full enrollment. Enrollment statuses are `ACTIVE`, `COMPLETED`, and `WITHDRAWN`; retain history and attempts.
+- **Lessons and progress:** A lesson may be content-only, video-only, or both, but must have at least one valid learning payload before publication; supplemental resources alone do not qualify. Video duration is capped at 1,050 seconds. Derive current course progress/completion from required lesson progress; assessments are not completion gates. Completion behavior after required lessons change remains open and is tracked in `DOMAIN-FOUNDATION.md` Section 53A.
+- **Learning Paths:** Statuses are `DRAFT`, `PUBLISHED`, and `ARCHIVED`. A published path contains published courses and never auto-enrolls students. If an included course later becomes unavailable, preserve the path relationship, deny access to that course, and flag the path for editorial review.
+- **Diagnostic assessments:** At most one optional final diagnostic assessment per course and per path in V1. Support single-choice and multiple-choice auto-scored questions, immutable attempt snapshots, unlimited retakes by default, deterministic weighting toward weak topics, and optional timed mode disabled by default. No pass/fail completion gate.
+- **Q&A lifecycle:** Question states are `OPEN`, `ANSWERED`, `CLOSED`, and `HIDDEN`; do not add a separate `RESOLVED` state without approval. Author edits are limited to open questions without an accepted answer. Preserve replies, moderation history, and audit context through soft deletion/moderation where needed.
+- **Data conventions:** Use UUIDs for WNM domain IDs by default, UTC timezone-aware timestamps, foreign keys and appropriate relationship/slug uniqueness, and archive/status transitions for history-bearing records. Avoid cascading deletion of attempts, audit records, or other historical data. Better Auth owns its auth schema/migrations; Drizzle owns WNM domain tables/migrations.
+- **Resolved V1 schema defaults:** Each re-enrollment creates a new enrollment episode while preserving historical episodes; current course completion is derived from currently required lessons while prior completion remains historical evidence; public previews require a published course, course-level preview enabled, and explicit lesson-level preview eligibility. See `DOMAIN-FOUNDATION.md` Section 53A for the precise rules.
+- **Resolved V1 content-domain inventory:** Blog posts, Knowledge Base articles with optional navigation categories/sections, Forms and submissions, structured Pages/page blocks, and explicit policy-domain records are separate from Courses/Lessons and retain domain-specific authorization and lifecycles. See `DOMAIN-FOUNDATION.md` Section 53A for boundaries and safeguards.
+- **Resolved V1 schema defaults:** Forms use a small validated field set, immutable published revisions, and submissions linked to the exact revision; respondents cannot edit submitted responses in V1, and submission access is explicitly permissioned. Authorization denies by default, combines applicable role/user grants within resource scope, gives explicit scoped denial precedence, and requires immediate-effective revocation plus audited server-side grant checks. History-bearing content is archived rather than cascading away learning, submission, policy, discussion, or audit history. The minimum audit event shape and required security-sensitive event coverage are defined in `DOMAIN-FOUNDATION.md` Section 53A. **Still pending before production launch:** jurisdiction-aware privacy review must set retention periods and legally required deletion/anonymization procedures; no fixed duration is invented here.
+- **Resolved V1 confidential-policy defaults:** Normal access requires explicit resource permission or configured audience; emergency access is restricted to `SUPER_ADMIN`/`ADMIN`, requires a justification, and audits allowed and denied attempts. Acknowledgment assignments snapshot their target users, record status and exact policy revision, and preserve history across revisions and withdrawal. Re-acknowledgment is assigned for a substantive revision only when that revision is marked as requiring it.
+
 # 7. Learning Architecture
 
 The core learning structure will be:
@@ -359,6 +387,48 @@ Students will eventually be able to ask questions related to learning content.
 Instructors/moderators will be able to participate and moderate discussions.
 
 There will be no generic global `Messages` system for this purpose.
+
+---
+
+# 10A. Approved V1 Content Modules
+
+The following are approved V1 requirements. They are planned work, not completed implementation.
+
+## Blog
+
+- A distinct Blog publishing domain with its own content lifecycle, routes, metadata, and permissions.
+- A minimal rich-text editor: paragraphs, headings, bold/italic, lists, links, quotes, and images.
+- Article-scoped discussion using the shared content Q&A capability.
+- Arbitrary user-supplied HTML is not allowed.
+
+## Knowledge Base
+
+- A distinct Knowledge Base domain with its own article structure, publication/access rules, and policy behavior.
+- Reader experience: breadcrumbs, reading time, back-to-top, section navigation with icons and active-heading indication, and load-more behavior where applicable.
+- Minimal editor: paragraphs, headings, bold/italic, lists, links, quotes, and images; no arbitrary user-supplied HTML.
+- Preserve approved Option C decisions: emergency access to confidential policies, reusable policy templates, and bulk policy-acknowledgment assignments.
+- Keep the module practical; do not expand it into a broad enterprise governance/incident-management suite.
+- AI remains deferred to V2.
+- V1 discussions are scoped to an individual article; series-wide discussion is optional future work.
+
+## Forms and visual page builder
+
+- Forms are in V1 and must preserve the approved Option A closed-form behavior and approved simple styling requirements. Validate submissions and authorization on the server.
+- The visual page builder supports templates and a blank canvas for authorized advanced editors.
+- Block availability and page mutations require explicit permissions and server-side validation. The page builder must not permit arbitrary scripts or unsafe HTML.
+
+## Shared authoring and discussion
+
+- Reuse a Tiptap-based authoring foundation across Lessons, Blog, and Knowledge Base while keeping their domain models, publication rules, and permissions distinct.
+- Use structured Tiptap JSON, the approved extension inventory, safe URL/embed handling, server-side validation, and a defined sanitization/rendering policy.
+- Distinguish native Tiptap extensions from custom WNM blocks. Verify free/open-source licenses and compatibility before installing dependencies. This plan does not authorize installation.
+- Q&A/discussion is content-scoped and reusable across Lessons, Blog articles, and Knowledge Base articles. It remains separate from deferred global/private Chat.
+- Students are read-only for published content. Moderators do not receive authoring rights by default. Restricted blocks require explicit role/user permission; client-side hiding is not a security boundary.
+- Approved collaboration/commenting capabilities must include explicit authorization safeguards.
+
+## Video duration
+
+The approved maximum video duration is **17 minutes and 30 seconds (17:30)**. V1 supports YouTube and supported external video URLs; protected self-hosted video remains deferred.
 
 ---
 
@@ -962,8 +1032,8 @@ Later:
 * Drizzle
 * Better Auth
 * Users
-* Roles
-* Permissions
+* Roles (multiple roles per user; approved role/status defaults in Section 6.1)
+* Scoped role/user permissions and server-side authorization
 * Security foundation
 * Environment configuration
 * RTL/Arabic foundation
@@ -991,19 +1061,34 @@ Later:
 
 ---
 
-## Phase 3 — Q&A
+## Phase 3 — Q&A and shared discussion
 
 Later:
 
-* Questions
-* Replies
-* Moderation
-* Reporting
+* Lesson/course questions and replies
+* Article-scoped discussion for Blog and Knowledge Base
+* Moderation and reporting
 * Instructor participation
+* Server-side content-scoped authorization
 
 ---
 
-## Phase 4 — Production
+## Phase 4 — Blog, Knowledge Base, Forms, and authoring
+
+Later:
+
+* Blog publishing and minimal editor integration
+* Knowledge Base article publishing and reading/navigation experience
+* Approved Knowledge Base policy capabilities
+* Forms with approved closed-form behavior
+* Visual page builder with templates and blank canvas for authorized advanced editors
+* Shared Tiptap authoring foundation and content-specific policies
+* Approved collaboration/commenting safeguards
+* Free/open-source license and compatibility verification before dependency installation
+
+---
+
+## Phase 5 — Production
 
 Later:
 
@@ -1020,7 +1105,7 @@ Later:
 
 ---
 
-## Phase 5 — Post-Launch
+## Phase 6 — Post-Launch
 
 Only after real users exist, prioritize based on actual needs:
 
@@ -1078,7 +1163,12 @@ If the answer is no, keep it deferred.
 * MVP-first development strategy agreed
 * Learning Paths approved as a V1 feature
 * Diagnostic assessment concept approved as a V1 feature
+* Blog and Knowledge Base approved as V1 content domains
+* Forms and controlled visual page builder approved for V1
+* Shared content-scoped discussions approved for Lessons, Blog articles, and Knowledge Base articles
+* Shared Tiptap authoring direction and approved inventory decisions recorded; implementation and dependency verification remain pending
 * Future AI/RAG direction approved as an architectural capability, not a V1 dependency
+* Initial identity and authorization schema defaults reconciled with `docs/DOMAIN-FOUNDATION.md`; implementation remains planned
 
 ### In Progress
 
@@ -1097,12 +1187,18 @@ If the answer is no, keep it deferred.
 * Progress
 * Learning Paths
 * Diagnostic assessments
-* Q&A
+* Q&A and content-scoped discussions
+* Blog
+* Knowledge Base and approved policy capabilities
+* Forms
+* Visual page builder and approved collaboration safeguards
+* Shared authoring foundation
 * Production deployment
 
 ### Intentionally Deferred
 
 * Support implementation
+* AI features (V2)
 * Self-hosted protected video
 * Paid-course infrastructure
 * Chat
